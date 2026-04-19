@@ -15,3 +15,24 @@ thread_number: 20
 
 seed_input:
 genes:
+
+# Tool environment overrides (optional)
+# Global config: ~/.config/FastMitoAssembler/tool_envs.yaml (set once, applies to all projects)
+# Project config: set tool_envs here to override the global config for this project only.
+# conda_env: name of an existing conda environment
+# bin_dir:   directory prepended to PATH when running the tool
+# Leave both empty ('') to use the auto-created bundled environment (default).
+# Run `fma check` to detect tools and `fma check --save` to save globally.
+tool_envs:
+  meangs:
+    conda_env: ''
+    bin_dir: ''
+  novoplasty:
+    conda_env: ''
+    bin_dir: ''
+  getorganelle:
+    conda_env: ''
+    bin_dir: ''
+  mitoz:
+    conda_env: ''
+    bin_dir: ''

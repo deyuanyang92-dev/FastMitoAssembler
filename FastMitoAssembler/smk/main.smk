@@ -38,6 +38,23 @@ THREAD_NUMBER = config.get('thread_number', 20)
 # ==============================================================
 
 # ==============================================================
+# Per-tool execution prefix (supports conda_env or bin_dir overrides)
+_TOOL_ENVS = config.get('tool_envs', {})
+
+def _shell_prefix(tool):
+    cfg = _TOOL_ENVS.get(tool) or {}
+    if not isinstance(cfg, dict):
+        return ''
+    conda_env = (cfg.get('conda_env') or '').strip()
+    bin_dir = (cfg.get('bin_dir') or '').strip()
+    if conda_env:
+        return f'conda run --no-capture-output -n {conda_env} '
+    if bin_dir:
+        return f'PATH="{bin_dir}:$PATH" '
+    return ''
+# ==============================================================
+
+# ==============================================================
 # Log directory
 LOG_DIR = Path(config.get("log_dir", "logs")).resolve()
 # Output directory
@@ -112,6 +129,7 @@ rule MEANGS:
     params:
         outdir=MEANGS_DIR(),
         seed_input=SEED_INPUT,
+        tool_prefix=_shell_prefix('meangs'),
     conda: "envs/meangs.yaml"
     message: "MEANGS for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'meangs.log')
@@ -124,11 +142,11 @@ rule MEANGS:
         seed_input={params.seed_input}
 
         if [[ $seed_input =~ \.gb[kf]?$ ]];then
-            genbank.py -f fasta $seed_input | seqkit head -n1 -w0 -o {output.seed_fas}
+            {params.tool_prefix}genbank.py -f fasta $seed_input | seqkit head -n1 -w0 -o {output.seed_fas}
         elif [[ $seed_input =~ \.fa[sta]*$ ]];then
-            seqkit head -n1 -w0 -o {output.seed_fas} $seed_input 
+            seqkit head -n1 -w0 -o {output.seed_fas} $seed_input
         else
-            meangs.py \\
+            {params.tool_prefix}meangs.py \\
                 -1 {input.fq1} \\
                 -2 {input.fq2} \\
                 -o {wildcards.sample} \\
@@ -197,7 +215,8 @@ rule NOVOPlasty:
     output:
         novoplasty_fasta=novoplasty_fasta,
     params:
-        output_path = NOVOPLASTY_DIR(),
+        output_path=NOVOPLASTY_DIR(),
+        tool_prefix=_shell_prefix('novoplasty'),
     conda: "envs/novoplasty.yaml"
     message: "NOVOPlasty for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'novoplasty.log')
@@ -207,7 +226,7 @@ rule NOVOPlasty:
         (
         cd {params.output_path}
 
-        NOVOPlasty.pl -c {input.novoplasty_config}
+        {params.tool_prefix}NOVOPlasty.pl -c {input.novoplasty_config}
 
         # remove +xxx
         seqkit replace -w0 \\
@@ -244,6 +263,7 @@ rule GetOrganelle:
     params:
         output_path=ORGANELLE_DIR(),
         output_path_temp=ORGANELLE_DIR("organelle"),
+        tool_prefix=_shell_prefix('getorganelle'),
     conda: "envs/getorganelle.yaml"
     message: "GetOrganelle for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'get_organelle.log')
@@ -270,7 +290,7 @@ rule GetOrganelle:
         fi
 
         # run GetOrganelle
-        get_organelle_from_reads.py \\
+        {params.tool_prefix}get_organelle_from_reads.py \\
             --continue \\
             -1 {wildcards.sample}_1.5G.fq.gz\\
             -2 {wildcards.sample}_2.5G.fq.gz \\
@@ -316,7 +336,8 @@ rule MitozAnnotate:
         summary=MITOZ_ANNO_RESULT_DIR("summary.txt"),
         genbank=MITOZ_ANNO_RESULT_DIR(f"{{sample}}_{ORGANELLE_DB}.get_organelle.fasta_mitoscaf.fa.gbf"),
     params:
-        outdir=MITOZ_ANNO_DIR()
+        outdir=MITOZ_ANNO_DIR(),
+        tool_prefix=_shell_prefix('mitoz'),
     conda: "envs/mitoz.yaml"
     message: "MitozAnnotate for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'mitoz_annotate.log')
@@ -327,7 +348,7 @@ rule MitozAnnotate:
         mkdir -p {params.outdir}
         cd {params.outdir}
 
-        mitoz annotate \\
+        {params.tool_prefix}mitoz annotate \\
             --outprefix {wildcards.sample} \\
             --thread_number {THREAD_NUMBER} \\
             --fastafiles {input.organelle_fasta_new} \\

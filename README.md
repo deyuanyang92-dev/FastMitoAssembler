@@ -1,5 +1,5 @@
 # Fast Assembler Workflow for MitoGenome
-> `FastMitoAssembler` is a software for fast, accurate assembly of mitochondrial genomes and generation of annotation documents.
+> `FastMitoAssembler` (alias: `fma` / `FMA`) is a software for fast, accurate assembly of mitochondrial genomes and generation of annotation documents.
 
 ### Credits
 
@@ -43,6 +43,43 @@ pip install -U git+https://github.com/deyuanyang92-dev/FastMitoAssembler.git
 ```
 
 Tool environments (MitoZ, GetOrganelle, etc.) are rebuilt automatically by Snakemake on the next run if their versions changed — no manual action needed.
+
+### CLI Aliases
+
+After installation, three equivalent commands are available:
+```bash
+FastMitoAssembler --help
+fma --help
+FMA --help
+```
+
+### Check Tool Availability
+
+If you already have tools installed (in PATH, a conda env, or a local directory):
+
+```bash
+# Check which tools are available in the current environment
+fma check
+
+# Also read tool_envs from a project config
+fma check --configfile config.yaml
+
+# Detect tools and save their locations globally (applies to all future projects)
+fma check --save
+```
+
+The global config is saved to `~/.config/FastMitoAssembler/tool_envs.yaml` and loaded automatically by every `fma run` — configure once, use everywhere.
+
+To override per-project, add `tool_envs` to your `config.yaml`:
+```yaml
+tool_envs:
+  meangs:
+    conda_env: 'my_meangs_env'   # existing conda environment name
+    bin_dir: ''
+  mitoz:
+    conda_env: ''
+    bin_dir: '/opt/mitoz/bin'    # directory containing tool binaries
+```
 
 ### Prepare Database
 ```bash

@@ -1,6 +1,7 @@
 import os
 import json
 import glob as glob_mod
+from pathlib import Path
 
 import click
 import snakemake
@@ -13,6 +14,7 @@ from FastMitoAssembler import (
     DEFAULT_OPTIONS,
     util,
 )
+from FastMitoAssembler.bin._check import load_tool_envs, TOOL_PROBES, _run_probe
 
 def _detect_samples(reads_dir, suffix_fq):
     """Detect sample names from reads_dir using paired suffix patterns.
@@ -93,13 +95,16 @@ def run(**kwargs):
         for key, value in data.items():
             if value != '':
                 configs[key] = value
+    # merge global tool_envs with project-level overrides
+    configs['tool_envs'] = load_tool_envs(configs.get('tool_envs', {}))
+
     if not configs['samples'] and configs['reads_dir']:
         detected = _detect_samples(configs['reads_dir'], kwargs['suffix_fq'])
         if detected:
             click.secho(f'>>> Auto-detected samples: {detected}', fg='cyan', err=True)
             configs['samples'] = detected
 
-    click.secho('>>> Configs:\n' + json.dumps(configs, indent=2), fg='green', err=True)
+    click.secho('>>> Configs:\n' + json.dumps(configs, indent=2, default=str), fg='green', err=True)
 
     if not (configs['reads_dir'] and configs['samples']):
         click.secho(f'reads_dir and samples must supply!', err=True, fg='red')
@@ -133,5 +138,20 @@ def run(**kwargs):
                 options[key] = value
 
     click.secho('>>> Options:\n' + json.dumps(options, indent=2), fg='green', err=True)
+
+    # validate any configured bin_dir entries before starting the workflow
+    probe_map = {tool: cmd for tool, cmd in TOOL_PROBES}
+    for tool, cfg in (configs.get('tool_envs') or {}).items():
+        if not isinstance(cfg, dict):
+            continue
+        bin_dir = (cfg.get('bin_dir') or '').strip()
+        if bin_dir and tool in probe_map:
+            ok = _run_probe(probe_map[tool], f'PATH="{bin_dir}:$PATH" ')
+            if not ok:
+                click.secho(
+                    f'Error: bin_dir for {tool} does not work: {bin_dir}\n'
+                    f'Please check the path or run `fma check` for diagnosis.',
+                    fg='red', err=True)
+                exit(1)
 
     snakemake.snakemake(kwargs['snakefile'], config=configs, **options)

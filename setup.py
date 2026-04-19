@@ -21,6 +21,8 @@ setup(
     include_package_data=True,
     entry_points={'console_scripts': [
         'FastMitoAssembler = FastMitoAssembler.bin.main:main',
+        'fma = FastMitoAssembler.bin.main:main',
+        'FMA = FastMitoAssembler.bin.main:main',
     ]},
     classifiers=[
         'Development Status :: 5 - Production/Stable',

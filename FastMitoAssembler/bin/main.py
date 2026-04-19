@@ -9,6 +9,7 @@ from FastMitoAssembler import MAIN_SMK, DEFAULT_CONFIG_FILE, DEFAULT_OPTION_FILE
 from FastMitoAssembler.bin._run import run
 from FastMitoAssembler.bin._other import prepare
 from FastMitoAssembler.bin._init import init
+from FastMitoAssembler.bin._check import check
 
 
 CONTEXT_SETTINGS = dict(
@@ -46,6 +47,7 @@ def main():
     cli.add_command(run)
     cli.add_command(prepare)
     cli.add_command(init)
+    cli.add_command(check)
     cli()
 
 
