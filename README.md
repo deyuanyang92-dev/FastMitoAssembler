@@ -2,48 +2,31 @@
 > `FastMitoAssembler` is a software for fast, accurate assembly of mitochondrial genomes and generation of annotation documents.
 
 ### Installation
-#### 1. create environment
+
+#### 1. Create environment
+
 ```bash
-# method 1: use conda [slowly and need large resources]
-conda env create -f environment.yml
-
-# method 2: use mamba [*recommended*]
-conda install mamba -c conda-forge -y
-mamba env create -f environment.yml
-
-# method 3: install manually
-conda config --add channels yccscucib
-conda config --add channels bioconda
-conda config --add channels conda-forge
-
-mamba create -n FastMitoAssembler -y python==3.9.*
-mamba install -n FastMitoAssembler -y snakemake
-mamba install -n FastMitoAssembler -y NOVOPlasty
-mamba install -n FastMitoAssembler -y GetOrganelle
-mamba install -n FastMitoAssembler -y spades
-mamba install -n FastMitoAssembler -y blast
-mamba install -n FastMitoAssembler -y mitoz
-mamba install -n FastMitoAssembler -y seqkit
-mamba install -n FastMitoAssembler -y meangs
-
-mamba install -n FastMitoAssembler -y click
-mamba install -n FastMitoAssembler -y jinja2 
-mamba install -n FastMitoAssembler -y pyyaml
-
-source $(dirname `which conda`)/activate FastMitoAssembler
-python -m pip insatll genbank
+# Recommended: use mamba for faster solving
+mamba create -n FastMitoAssembler -c conda-forge \
+    python=3.9 "snakemake>=7" click jinja2 pyyaml ete3
 ```
 
-#### 2. activate environment 
+Tool environments (MEANGS, NOVOPlasty, GetOrganelle, MitoZ) are created automatically
+by Snakemake on first run — no manual installation needed.
+Each tool lives in its own isolated environment, so upgrading one tool never breaks others.
+
+#### 2. Activate environment
+
 ```bash
-source $(dirname `which conda`)/activate FastMitoAssembler
+conda activate FastMitoAssembler
 ```
 
-#### 3. install FastMitoAssembler
+#### 3. Install FastMitoAssembler
+
 ```bash
-python -m pip install -U FastMitoAssembler
-# or
-python -m pip install -U dist/FastMitoAssembler*whl
+pip install FastMitoAssembler
+# or from source
+pip install -U dist/FastMitoAssembler*.whl
 ```
 
 ### Prepare Database
@@ -77,6 +60,7 @@ FastMitoAssembler --help
 FastMitoAssembler run --help
 
 # run with configfile [recommended]
+# --use-conda is on by default; tool environments are auto-created on first run
 FastMitoAssembler run --configfile config.yaml
 
 # run with parameters
@@ -87,6 +71,10 @@ FastMitoAssembler run --configfile config.yaml --cores 8
 
 # dryrun the workflow
 FastMitoAssembler run --configfile config.yaml --dryrun
+
+# HPC: share tool environments across projects to avoid rebuilding
+FastMitoAssembler run --configfile config.yaml --cores 8 \
+    --conda-prefix ~/.conda/snakemake-envs
 
 # run with options
 FastMitoAssembler run --configfile config.yaml --optionfile options.yaml
