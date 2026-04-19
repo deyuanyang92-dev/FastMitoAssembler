@@ -31,9 +31,23 @@ def ncbitaxa(**kwargs):
               multiple=True,
 )
 @click.option('--list', help='list configured databases checking and exit', is_flag=True)
+@click.option('--use-env', default=None,
+              help='conda environment name where GetOrganelle is installed (e.g. FastMitoAssembler-getorganelle)')
 def organelle(**kwargs):
-    cmd = 'get_organelle_config.py --list'
+    runner = f'conda run -n {kwargs["use_env"]} ' if kwargs['use_env'] else ''
+
+    cmd = f'{runner}get_organelle_config.py --list'
     status, output = util.getstatusoutput(cmd)
+
+    if status != 0 and not kwargs['use_env']:
+        click.secho(
+            'get_organelle_config.py not found in current environment.\n'
+            'Please create and specify the GetOrganelle environment:\n\n'
+            '  conda env create -f /path/to/FastMitoAssembler/smk/envs/getorganelle.yaml -n getorganelle-env\n'
+            '  FastMitoAssembler prepare organelle -a animal_mt --use-env getorganelle-env',
+            fg='red', err=True)
+        return
+
     configured_dbs = set([db.split()[0] for db in output.strip().split('\n') if db])
     if configured_dbs:
         click.secho(f'configured databases:\n{output}', fg='cyan')
@@ -47,6 +61,6 @@ def organelle(**kwargs):
                 if not click.confirm(f'"{database}" alreay configured, overwrite it?'):
                     continue
             click.secho(f'preparing database for GetOrganelle: {database}', fg='green')
-            cmd = f'get_organelle_config.py --add {database}'
+            cmd = f'{runner}get_organelle_config.py --add {database}'
             status, output = util.getstatusoutput(cmd)
             click.secho(output)
