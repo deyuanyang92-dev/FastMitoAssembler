@@ -112,6 +112,7 @@ rule MEANGS:
     params:
         outdir=MEANGS_DIR(),
         seed_input=SEED_INPUT,
+    conda: "envs/meangs.yaml"
     message: "MEANGS for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'meangs.log')
     benchmark: BENCHMARK_DIR.joinpath('{sample}', 'meangs.stat')
@@ -197,6 +198,7 @@ rule NOVOPlasty:
         novoplasty_fasta=novoplasty_fasta,
     params:
         output_path = NOVOPLASTY_DIR(),
+    conda: "envs/novoplasty.yaml"
     message: "NOVOPlasty for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'novoplasty.log')
     benchmark: BENCHMARK_DIR.joinpath('{sample}', 'novoplasty.stat')
@@ -242,6 +244,7 @@ rule GetOrganelle:
     params:
         output_path=ORGANELLE_DIR(),
         output_path_temp=ORGANELLE_DIR("organelle"),
+    conda: "envs/getorganelle.yaml"
     message: "GetOrganelle for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'get_organelle.log')
     benchmark: BENCHMARK_DIR.joinpath('{sample}', 'get_organelle.stat')
@@ -314,6 +317,7 @@ rule MitozAnnotate:
         genbank=MITOZ_ANNO_RESULT_DIR(f"{{sample}}_{ORGANELLE_DB}.get_organelle.fasta_mitoscaf.fa.gbf"),
     params:
         outdir=MITOZ_ANNO_DIR()
+    conda: "envs/mitoz.yaml"
     message: "MitozAnnotate for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'mitoz_annotate.log')
     benchmark: BENCHMARK_DIR.joinpath('{sample}', 'mitoz_annotate.stat')
