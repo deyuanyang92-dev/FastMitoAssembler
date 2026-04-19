@@ -1,6 +1,12 @@
 # Fast Assembler Workflow for MitoGenome
 > `FastMitoAssembler` is a software for fast, accurate assembly of mitochondrial genomes and generation of annotation documents.
 
+### Credits
+
+- **Original idea:** Deyuan Yang
+- **Original code:** Bioinformatics engineers at Novogene (诺禾元生物科技)
+- **Maintenance & updates:** Managed by Deyuan Yang using [Claude Code](https://claude.ai/code) — leveraging AI-assisted development to keep pace with the rapidly evolving bioinformatics ecosystem
+
 ### Installation
 
 #### 1. Create environment
