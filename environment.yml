@@ -1,24 +1,11 @@
 name: FastMitoAssembler
-
 channels:
   - conda-forge
-  - bioconda
-  - yccscucib
   - defaults
-
 dependencies:
-  - python==3.9.*
-  - pip
-  - snakemake
-  - NOVOPlasty
-  - GetOrganelle
-  - spades
-  - blast
-  - mitoz
-  - seqkit
-  - meangs
+  - python=3.9
+  - snakemake>=7
   - click
   - jinja2
   - pyyaml
-  - pip:
-    - genbank
+  - ete3
