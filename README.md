@@ -44,6 +44,20 @@ pip install -U git+https://github.com/deyuanyang92-dev/FastMitoAssembler.git
 
 Tool environments (MitoZ, GetOrganelle, etc.) are rebuilt automatically by Snakemake on the next run if their versions changed — no manual action needed.
 
+#### Troubleshooting: `fma` / `FMA` command not found after upgrade
+
+If `pip install -U` shows "Requirement already satisfied" (same version number) and skips reinstalling, the CLI entry points (`fma`, `FMA`) may not be regenerated. Fix with:
+
+```bash
+pip install --force-reinstall --no-deps \
+    git+https://github.com/deyuanyang92-dev/FastMitoAssembler.git
+```
+
+Then verify:
+```bash
+fma --version
+```
+
 ### CLI Aliases
 
 After installation, three equivalent commands are available:
