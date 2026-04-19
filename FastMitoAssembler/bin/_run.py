@@ -40,11 +40,15 @@ from FastMitoAssembler import (
 
 ## snakemke options
 @click.option('--cores', help='use at most N CPU cores/jobs in parallel', type=int, default=DEFAULT_OPTIONS['cores'], show_default=True)
-@click.option('--dryrun', help='do not execute anything, and display what would bedone', is_flag=True)
+@click.option('--dryrun', help='do not execute anything, and display what would be done', is_flag=True)
 @click.option('--use-conda/--no-use-conda', default=True, show_default=True,
               help='use conda environments for each rule')
 @click.option('--conda-prefix', default=None,
               help='directory to store conda environments (shared across projects)')
+@click.option('--keepgoing', is_flag=True,
+              help='go on with independent jobs if a job fails')
+@click.option('--unlock', is_flag=True,
+              help='unlock the working directory if it is locked by a previous run')
 def run(**kwargs):
 
     configs = {}
@@ -84,6 +88,8 @@ def run(**kwargs):
         'dryrun': kwargs['dryrun'],
         'printshellcmds': True,
         'use_conda': kwargs['use_conda'],
+        'keepgoing': kwargs['keepgoing'],
+        'unlock': kwargs['unlock'],
     }
     if kwargs['conda_prefix']:
         options['conda_prefix'] = kwargs['conda_prefix']
