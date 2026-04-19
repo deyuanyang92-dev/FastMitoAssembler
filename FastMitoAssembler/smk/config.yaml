@@ -13,6 +13,20 @@ clade: 'Annelida-segmented-worms'
 genetic_code: 5
 thread_number: 20
 
+# MEANGS parameters
+meangs_thread: 4        # threads for MEANGS detection (-t)
+meangs_reads: 2000000   # number of reads to sample (-n); reduce for faster speed
+meangs_deepin: true     # enable deeper assembly (--deepin); false = faster but shallower
+meangs_clade: 'Annelida-segmented-worms'
+# Available meangs_clade options (same as MitoZ --clade):
+#   Vertebrata               # 脊椎动物
+#   Arthropoda               # 节肢动物
+#   Mollusca                 # 软体动物
+#   Annelida-segmented-worms # 环节动物 (default)
+#   Echinodermata            # 棘皮动物
+#   Cnidaria                 # 刺胞动物
+#   Others                   # 其他
+
 seed_input:
 genes:
 

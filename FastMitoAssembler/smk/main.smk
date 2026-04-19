@@ -35,6 +35,11 @@ INSERT_SIZE = config.get('insert_size', 300)
 CLADE = config.get('clade', 'Annelida-segmented-worms')
 GENETIC_CODE = config.get('genetic_code', 5)
 THREAD_NUMBER = config.get('thread_number', 20)
+# MEANGS configuration
+MEANGS_THREAD = config.get('meangs_thread', 4)
+MEANGS_READS  = config.get('meangs_reads', 2000000)
+MEANGS_DEEPIN = config.get('meangs_deepin', True)
+MEANGS_CLADE  = config.get('meangs_clade', 'Annelida-segmented-worms')
 # ==============================================================
 
 # ==============================================================
@@ -130,6 +135,12 @@ rule MEANGS:
         outdir=MEANGS_DIR(),
         seed_input=SEED_INPUT,
         tool_prefix=_shell_prefix('meangs'),
+        meangs_thread=MEANGS_THREAD,
+        meangs_reads=MEANGS_READS,
+        meangs_deepin=MEANGS_DEEPIN,
+        meangs_clade=MEANGS_CLADE,
+        deepin_flag='--deepin' if MEANGS_DEEPIN else '',
+        insert_size=INSERT_SIZE,
     conda: "envs/meangs.yaml"
     message: "MEANGS for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'meangs.log')
@@ -150,11 +161,22 @@ rule MEANGS:
                 -1 {input.fq1} \\
                 -2 {input.fq2} \\
                 -o {wildcards.sample} \\
-                -t 2 \\
-                -n 2000000 \\
-                -i 350 \\
-                --deepin
-            seqkit head -n1 -w0 -o {output.seed_fas} {wildcards.sample}/{wildcards.sample}_deep_detected_mito.fas
+                -t {params.meangs_thread} \\
+                -n {params.meangs_reads} \\
+                -i {params.insert_size} \\
+                --clade {params.meangs_clade} \\
+                {params.deepin_flag}
+
+            # locate MEANGS output: deepin → _deep_detected_mito.fas
+            # non-deepin → _detected_mito.fas, or mito.fasta in some versions
+            if [ "{params.meangs_deepin}" = "True" ]; then
+                meangs_out={wildcards.sample}/{wildcards.sample}_deep_detected_mito.fas
+            elif [ -f {wildcards.sample}/{wildcards.sample}_detected_mito.fas ]; then
+                meangs_out={wildcards.sample}/{wildcards.sample}_detected_mito.fas
+            else
+                meangs_out={wildcards.sample}/mito.fasta
+            fi
+            seqkit head -n1 -w0 -o {output.seed_fas} $meangs_out
         fi) 2>{log}.err 1>{log}
         """
 
