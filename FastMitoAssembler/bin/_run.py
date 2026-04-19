@@ -1,7 +1,6 @@
 import os
 import json
 import glob as glob_mod
-from pathlib import Path
 
 import click
 import snakemake
