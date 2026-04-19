@@ -41,6 +41,10 @@ from FastMitoAssembler import (
 ## snakemke options
 @click.option('--cores', help='use at most N CPU cores/jobs in parallel', type=int, default=DEFAULT_OPTIONS['cores'], show_default=True)
 @click.option('--dryrun', help='do not execute anything, and display what would bedone', is_flag=True)
+@click.option('--use-conda/--no-use-conda', default=True, show_default=True,
+              help='use conda environments for each rule')
+@click.option('--conda-prefix', default=None,
+              help='directory to store conda environments (shared across projects)')
 def run(**kwargs):
 
     configs = {}
@@ -79,7 +83,10 @@ def run(**kwargs):
         'cores': kwargs['cores'],
         'dryrun': kwargs['dryrun'],
         'printshellcmds': True,
+        'use_conda': kwargs['use_conda'],
     }
+    if kwargs['conda_prefix']:
+        options['conda_prefix'] = kwargs['conda_prefix']
     if kwargs['optionfile'] and os.path.isfile(kwargs['optionfile']):
         click.secho('>>> reading options from file: {optionfile}'.format(**kwargs), fg='green', err=True)
         data = util.read_yaml(kwargs['optionfile'])
