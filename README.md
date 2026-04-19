@@ -59,6 +59,22 @@ FastMitoAssembler prepare organelle -a animal_mt -a embplant_mt # config multipl
 FastMitoAssembler prepare organelle -a all  # config all databases
 ```
 
+### Generate Config Files
+
+```bash
+# Generate config.yaml in the current directory
+FastMitoAssembler init
+
+# Also generate options.yaml (for Snakemake/cluster settings)
+FastMitoAssembler init --options
+
+# Custom output filename
+FastMitoAssembler init -o myproject.yaml
+
+# Overwrite existing files without prompting
+FastMitoAssembler init --force
+```
+
 ### Run Workflow
 
 `config.yaml` example:
@@ -80,6 +96,14 @@ FastMitoAssembler run --configfile config.yaml
 
 # run with parameters
 FastMitoAssembler run --reads_dir ../data --samples S1 --samples S2
+
+# auto-detect samples from reads directory (no --samples needed)
+# default suffix pair: _1.clean.fq.gz,_2.clean.fq.gz
+FastMitoAssembler run --reads_dir ../data
+
+# support multiple suffix pairs (separated by ";")
+FastMitoAssembler run --reads_dir ../data \
+    --suffix_fq '_1.clean.fq.gz,_2.clean.fq.gz;_R1.fastq.gz,_R2.fastq.gz'
 
 # set cores
 FastMitoAssembler run --configfile config.yaml --cores 8

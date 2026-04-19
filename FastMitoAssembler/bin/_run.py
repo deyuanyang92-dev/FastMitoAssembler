@@ -1,5 +1,6 @@
 import os
 import json
+import glob as glob_mod
 
 import click
 import snakemake
@@ -12,6 +13,26 @@ from FastMitoAssembler import (
     DEFAULT_OPTIONS,
     util,
 )
+
+def _detect_samples(reads_dir, suffix_fq):
+    """Detect sample names from reads_dir using paired suffix patterns.
+
+    suffix_fq format: 'R1_suffix,R2_suffix' pairs separated by ';'
+    e.g. '_1.clean.fq.gz,_2.clean.fq.gz;_R1.fastq.gz,_R2.fastq.gz'
+    Only the R1 suffix (first of each pair) is used for detection.
+    """
+    samples = []
+    for pair in suffix_fq.split(';'):
+        pair = pair.strip()
+        if not pair:
+            continue
+        r1_suffix = pair.split(',')[0].strip()
+        for path in sorted(glob_mod.glob(os.path.join(reads_dir, '**', f'*{r1_suffix}'), recursive=True)):
+            name = os.path.basename(path)
+            if name.endswith(r1_suffix):
+                samples.append(name[:-len(r1_suffix)])
+    return list(dict.fromkeys(samples))
+
 
 @click.command(help=click.style('run the workflow', fg='cyan', bold=True), no_args_is_help=True)
 # custom configs
@@ -30,6 +51,11 @@ from FastMitoAssembler import (
 @click.option('--read_length', help='the read length of Illumina short reads', type=int, default=DEFAULT_CONFIG['read_length'], show_default=True)
 @click.option('--max_mem_gb', help='the limit of RAM usage for NOVOPlasty (unit: GB)', type=int, default=DEFAULT_CONFIG['max_mem_gb'], show_default=True)
 
+@click.option('--suffix_fq',
+              help='paired fastq suffixes for auto-detecting samples (R1,R2 per pair; pairs separated by ";"). '
+                   'Example: "_1.clean.fq.gz,_2.clean.fq.gz;_R1.fastq.gz,_R2.fastq.gz"',
+              default='_1.clean.fq.gz,_2.clean.fq.gz',
+              show_default=True)
 @click.option('--seed_input', help='use a specific seed input, .fasta, or .gb')
 @click.option('--genes', help='the specific genes')
 
@@ -67,6 +93,12 @@ def run(**kwargs):
         for key, value in data.items():
             if value != '':
                 configs[key] = value
+    if not configs['samples'] and configs['reads_dir']:
+        detected = _detect_samples(configs['reads_dir'], kwargs['suffix_fq'])
+        if detected:
+            click.secho(f'>>> Auto-detected samples: {detected}', fg='cyan', err=True)
+            configs['samples'] = detected
+
     click.secho('>>> Configs:\n' + json.dumps(configs, indent=2), fg='green', err=True)
 
     if not (configs['reads_dir'] and configs['samples']):

@@ -8,6 +8,7 @@ import snakemake
 from FastMitoAssembler import MAIN_SMK, DEFAULT_CONFIG_FILE, DEFAULT_OPTION_FILE, VERSION, BANNER
 from FastMitoAssembler.bin._run import run
 from FastMitoAssembler.bin._other import prepare
+from FastMitoAssembler.bin._init import init
 
 
 CONTEXT_SETTINGS = dict(
@@ -44,6 +45,7 @@ def cli():
 def main():
     cli.add_command(run)
     cli.add_command(prepare)
+    cli.add_command(init)
     cli()
 
 
