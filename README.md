@@ -30,10 +30,19 @@ conda activate FastMitoAssembler
 #### 3. Install FastMitoAssembler
 
 ```bash
-pip install FastMitoAssembler
-# or from source
-pip install -U dist/FastMitoAssembler*.whl
+pip install git+https://github.com/deyuanyang92-dev/FastMitoAssembler.git
 ```
+
+### Update
+
+When a new version is released, run:
+
+```bash
+conda activate FastMitoAssembler
+pip install -U git+https://github.com/deyuanyang92-dev/FastMitoAssembler.git
+```
+
+Tool environments (MitoZ, GetOrganelle, etc.) are rebuilt automatically by Snakemake on the next run if their versions changed — no manual action needed.
 
 ### Prepare Database
 ```bash
