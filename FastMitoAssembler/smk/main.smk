@@ -25,21 +25,55 @@ SEED_INPUT = config.get('seed_input')
 SEED_INPUT = Path(SEED_INPUT).resolve() if SEED_INPUT else 'none'
 
 # NOVOPlasty configuration
-GENOME_MIN_SIZE = config.get('genome_min_size', 12000)
-GENOME_MAX_SIZE = config.get('genome_max_size', 30000)
-KMER_SIZE = config.get('kmer_size', 39)
-MAX_MEM_GB = config.get('max_mem_gb', 10)
+NOVOPLASTY_GENOME_MIN_SIZE = config.get('novoplasty_genome_min_size', 12000)
+NOVOPLASTY_GENOME_MAX_SIZE = config.get('novoplasty_genome_max_size', 30000)
+NOVOPLASTY_KMER_SIZE = config.get('novoplasty_kmer_size', 39)
+NOVOPLASTY_MAX_MEM_GB = config.get('novoplasty_max_mem_gb', 10)
 READ_LENGTH = int(config.get('read_length', 150))
 INSERT_SIZE = config.get('insert_size', 300)
 # MitozAnnotate configuration
-CLADE = config.get('clade', 'Annelida-segmented-worms')
+MITOZ_CLADE = config.get('mitoz_clade', 'Annelida-segmented-worms')
 GENETIC_CODE = config.get('genetic_code', 5)
-THREAD_NUMBER = config.get('thread_number', 20)
+MITOZ_THREAD_NUMBER = config.get('mitoz_thread_number', 20)
 # MEANGS configuration
 MEANGS_THREAD = config.get('meangs_thread', 4)
 MEANGS_READS  = config.get('meangs_reads', 2000000)
 MEANGS_DEEPIN = config.get('meangs_deepin', True)
 MEANGS_CLADE  = config.get('meangs_clade', 'Annelida-segmented-worms')
+
+# GetOrganelle configuration — blank config values are intentionally NOT
+# forwarded so GetOrganelle applies its own -F-dependent defaults.
+GETORGANELLE_ALL_DATA = bool(config.get('getorganelle_all_data', False))
+
+def _go_flag(flag, key):
+    v = config.get(key)
+    if v in (None, '', []):
+        return ''
+    return f'{flag} {v}'
+
+def _build_go_flags():
+    parts = [
+        _go_flag('-R', 'getorganelle_rounds'),
+        _go_flag('-k', 'getorganelle_kmers'),
+        _go_flag('-t', 'getorganelle_threads'),
+        _go_flag('-w', 'getorganelle_word_size'),
+        _go_flag('--max-extending-len', 'getorganelle_max_extending_len'),
+    ]
+    if GETORGANELLE_ALL_DATA:
+        parts.append(_go_flag('--max-reads', 'getorganelle_max_reads') or '--max-reads inf')
+        parts.append(_go_flag('--reduce-reads-for-coverage', 'getorganelle_reduce_reads_for_coverage') or '--reduce-reads-for-coverage inf')
+    else:
+        parts.append(_go_flag('--max-reads', 'getorganelle_max_reads'))
+        parts.append(_go_flag('--reduce-reads-for-coverage', 'getorganelle_reduce_reads_for_coverage'))
+    return ' '.join(p for p in parts if p)
+
+GETORGANELLE_FLAGS = _build_go_flags()
+
+# Optional fastp adapter-only trimming
+FASTP_CFG = config.get('fastp') or {}
+FASTP_ENABLED = bool(FASTP_CFG.get('enabled'))
+FASTP_EXTRA = FASTP_CFG.get('extra_args') or ''
+
 # Cleanup intermediate files after each step
 CLEANUP = config.get('cleanup', False)
 # ==============================================================
@@ -91,6 +125,7 @@ MITOZ_ANNO_RESULT_DIR = partial(MITOZ_ANNO_DIR, f"{{sample}}.{ORGANELLE_DB}.get_
 BENCHMARK_DIR = Path(config.get("benchmark_dir", "benchmark")).resolve()
 
 # input/output
+FASTP_DIR = partial(SAMPLE_DIR, "0.fastp")
 seed_fas = MEANGS_DIR("{sample}_deep_detected_mito.fas")
 novoplasty_config = NOVOPLASTY_DIR("config.txt")
 novoplasty_fasta = NOVOPLASTY_DIR("{sample}.novoplasty.fasta")
@@ -102,14 +137,18 @@ mm_report = partial(SAMPLE_DIR, "materials_and_methods.md")
 # Read data
 READS_DIR = Path(config.get("reads_dir", ".")).resolve()
 FQ_PATH_PATTERN = config.get('fq_path_pattern', '{sample}/{sample}_1.clean.fq.gz')
-FQ1 = READS_DIR.joinpath(FQ_PATH_PATTERN)
-FQ2 = READS_DIR.joinpath(FQ_PATH_PATTERN.replace('1', '2'))
+RAW_FQ1 = READS_DIR.joinpath(FQ_PATH_PATTERN)
+RAW_FQ2 = READS_DIR.joinpath(FQ_PATH_PATTERN.replace('1', '2'))
 
+# When fastp is enabled, downstream rules consume its output instead of raw reads.
+FASTP_FQ1 = FASTP_DIR("{sample}_1.adapter.fq.gz")
+FASTP_FQ2 = FASTP_DIR("{sample}_2.adapter.fq.gz")
+FQ1 = FASTP_FQ1 if FASTP_ENABLED else RAW_FQ1
+FQ2 = FASTP_FQ2 if FASTP_ENABLED else RAW_FQ2
 
-# FQ1 = READS_DIR.joinpath("{sample}_1.clean.fq.gz")
-# FQ2 = READS_DIR.joinpath("{sample}_2.clean.fq.gz")
-READS_NUM_5G = round(5e9 / 2 / READ_LENGTH)
-CUT_5G_DATA = config.get('cut_5g_data', 'yes')
+# Subsample before GetOrganelle (0 / null → no subsample, feed all reads through).
+SUBSAMPLE_GB = config.get('subsample_gb', 5) or 0
+SUBSAMPLE_READS = round(SUBSAMPLE_GB * 1e9 / 2 / READ_LENGTH) if SUBSAMPLE_GB else 0
 # ==============================================================
 
 # default target
@@ -125,6 +164,42 @@ rule all:
         expand(mm_report(), sample=SAMPLES),
     run:
         print('ok')
+
+if FASTP_ENABLED:
+    rule fastp_adapter_trim:
+        """
+        Optional upstream adapter-only trim via fastp.
+
+        `-Q` disables quality filtering and `-L` disables length filtering —
+        adapter removal only, per NOVOPlasty / GetOrganelle author guidance
+        against Phred quality trimming.
+        Materialised only when `fastp.enabled: true` in config.yaml.
+        """
+        input:
+            fq1=RAW_FQ1,
+            fq2=RAW_FQ2,
+        output:
+            fq1=FASTP_FQ1,
+            fq2=FASTP_FQ2,
+        params:
+            outdir=FASTP_DIR(),
+            extra=FASTP_EXTRA,
+            tool_prefix=_shell_prefix('fastp'),
+        conda: "envs/fastp.yaml"
+        message: "fastp (adapter-only) for sample: {wildcards.sample}"
+        log: LOG_DIR.joinpath('{sample}', 'fastp.log')
+        benchmark: BENCHMARK_DIR.joinpath('{sample}', 'fastp.stat')
+        shell:
+            """
+            (
+            mkdir -p {params.outdir}
+            {params.tool_prefix}fastp --detect_adapter_for_pe -Q -L \\
+                -i {input.fq1} -I {input.fq2} \\
+                -o {output.fq1} -O {output.fq2} \\
+                {params.extra} \\
+                -j {log}.json -h {log}.html
+            ) 2>{log}.err 1>{log}
+            """
 
 rule MEANGS:
     """
@@ -234,10 +309,10 @@ rule NOVOPlasty_config:
                 fq1=input.fq1,
                 fq2=input.fq2,
                 output_path=params.output_path,
-                genome_min_size=GENOME_MIN_SIZE,
-                genome_max_size=GENOME_MAX_SIZE,
-                kmer_size=KMER_SIZE,
-                max_mem_gb=MAX_MEM_GB,
+                genome_min_size=NOVOPLASTY_GENOME_MIN_SIZE,
+                genome_max_size=NOVOPLASTY_GENOME_MAX_SIZE,
+                kmer_size=NOVOPLASTY_KMER_SIZE,
+                max_mem_gb=NOVOPLASTY_MAX_MEM_GB,
                 read_length=READ_LENGTH,
                 insert_size=INSERT_SIZE,
             )
@@ -316,6 +391,8 @@ rule GetOrganelle:
         output_path=ORGANELLE_DIR(),
         output_path_temp=ORGANELLE_DIR("organelle"),
         tool_prefix=_shell_prefix('getorganelle'),
+        go_flags=GETORGANELLE_FLAGS,
+        subsample_reads=SUBSAMPLE_READS,
         cleanup=CLEANUP,
     conda: "envs/getorganelle.yaml"
     message: "GetOrganelle for sample: {wildcards.sample}"
@@ -327,33 +404,37 @@ rule GetOrganelle:
         mkdir -p {params.output_path}
         cd {params.output_path}
 
-        # get 5G data
-        if [ ! -e {wildcards.sample}_1.5G.fq.gz ];then
+        # Optional subsample (config: subsample_gb; 0 disables).
+        if [ {params.subsample_reads} -gt 0 ] && [ ! -e {wildcards.sample}_1.sub.fq.gz ]; then
             seqkit stats {input.fq1} > {wildcards.sample}.fq1.stats.txt
             reads_num_fq1=$(awk 'NR==2{{print $4}}' {wildcards.sample}.fq1.stats.txt | sed 's#,##g')
             echo "reads num of fq1: $reads_num_fq1"
-
-            if [ $reads_num_fq1 -gt {READS_NUM_5G} ];then
-                seqkit head -n {READS_NUM_5G} -w0 {input.fq1} -j4 -o {wildcards.sample}_1.5G.fq.gz
-                seqkit head -n {READS_NUM_5G} -w0 {input.fq2} -j4 -o {wildcards.sample}_2.5G.fq.gz
+            if [ $reads_num_fq1 -gt {params.subsample_reads} ]; then
+                seqkit head -n {params.subsample_reads} -w0 {input.fq1} -j4 -o {wildcards.sample}_1.sub.fq.gz
+                seqkit head -n {params.subsample_reads} -w0 {input.fq2} -j4 -o {wildcards.sample}_2.sub.fq.gz
             else
-                ln -sf {input.fq1} {wildcards.sample}_1.5G.fq.gz
-                ln -sf {input.fq2} {wildcards.sample}_2.5G.fq.gz
+                ln -sf {input.fq1} {wildcards.sample}_1.sub.fq.gz
+                ln -sf {input.fq2} {wildcards.sample}_2.sub.fq.gz
             fi
+        fi
+
+        if [ {params.subsample_reads} -gt 0 ]; then
+            go_fq1={wildcards.sample}_1.sub.fq.gz
+            go_fq2={wildcards.sample}_2.sub.fq.gz
+        else
+            go_fq1={input.fq1}
+            go_fq2={input.fq2}
         fi
 
         # run GetOrganelle
         {params.tool_prefix}get_organelle_from_reads.py \\
             --continue \\
-            -1 {wildcards.sample}_1.5G.fq.gz\\
-            -2 {wildcards.sample}_2.5G.fq.gz \\
-            -R 20 \\
-            -k 21,33,45,55,65,75,85,95,105,111,127 \\
+            -1 $go_fq1 \\
+            -2 $go_fq2 \\
             -F {ORGANELLE_DB} \\
             -o {params.output_path_temp} \\
-            --reduce-reads-for-coverage inf \\
-            --max-reads inf \\
-            -s {input.novoplasty_fasta}
+            -s {input.novoplasty_fasta} \\
+            {params.go_flags}
 
         # replace '+', 'circular' characters
         seqkit replace -w0 \\
@@ -366,8 +447,8 @@ rule GetOrganelle:
         if [ "{params.cleanup}" = "True" ]; then
             rm -rf organelle/filtered_spades/
             rm -f organelle/extended*.fq
-            rm -f {wildcards.sample}_1.5G.fq.gz \
-                  {wildcards.sample}_2.5G.fq.gz \
+            rm -f {wildcards.sample}_1.sub.fq.gz \
+                  {wildcards.sample}_2.sub.fq.gz \
                   {wildcards.sample}.fq1.stats.txt
         fi
         ) 2>{log}.err 1>{log}
@@ -412,13 +493,13 @@ rule MitozAnnotate:
 
         {params.tool_prefix}mitoz annotate \\
             --outprefix {wildcards.sample} \\
-            --thread_number {THREAD_NUMBER} \\
+            --thread_number {MITOZ_THREAD_NUMBER} \\
             --fastafiles {input.organelle_fasta_new} \\
             --fq1 {input.fq1} \\
             --fq2 {input.fq2} \\
             --species_name "{wildcards.sample}" \\
             --genetic_code {GENETIC_CODE} \\
-            --clade {CLADE}
+            --clade {MITOZ_CLADE}
 
         if [ "{params.cleanup}" = "True" ]; then
             rm -f {params.outdir}/tmp_*

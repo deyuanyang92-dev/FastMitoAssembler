@@ -3,15 +3,15 @@ samples: []
 result_dir: 'result'
 fq_path_pattern: '{sample}/{sample}_1.clean.fq.gz'
 organelle_database: 'animal_mt'
-genome_min_size: 12000
-genome_max_size: 22000
-kmer_size: 33
-max_mem_gb: 10
+novoplasty_genome_min_size: 12000
+novoplasty_genome_max_size: 22000
+novoplasty_kmer_size: 33
+novoplasty_max_mem_gb: 10
 read_length: 150
 insert_size: 300
-clade: 'Annelida-segmented-worms'
+mitoz_clade: 'Annelida-segmented-worms'
 genetic_code: 5
-thread_number: 20
+mitoz_thread_number: 20
 
 # MEANGS parameters
 meangs_thread: 4        # threads for MEANGS detection (-t)
@@ -28,6 +28,33 @@ meangs_clade: 'Annelida-segmented-worms'
 #   Others                   # 其他
 
 cleanup: false       # set true to remove intermediate files after each tool step
+
+# GetOrganelle tuning
+# Most keys are intentionally blank: GetOrganelle's own defaults are
+# -F-dependent (e.g. --max-reads is 1.5E7 / 7.5E7 / 3E8 for plastid / plant-mt /
+# animal_mt). Leaving a key blank tells us NOT to forward it, which lets
+# GetOrganelle pick the right default for the organelle type.
+# See: get_organelle_from_reads.py --help
+getorganelle_threads: 4                     # -t; we ship 4 (upstream default is 1)
+getorganelle_rounds:                        # -R; blank = -F-based default (animal_mt=10)
+getorganelle_kmers:                         # -k; blank = GetOrganelle default "21,55,85,115"
+getorganelle_max_reads:                     # --max-reads; blank = -F-based default, "inf" = all reads
+getorganelle_reduce_reads_for_coverage:     # --reduce-reads-for-coverage; blank = default 500, "inf" = no cap
+getorganelle_word_size:                     # -w; blank = auto-estimate
+getorganelle_max_extending_len:             # --max-extending-len; blank = no cap
+getorganelle_all_data: false                # true → sets --max-reads inf AND --reduce-reads-for-coverage inf
+
+# Subsample the paired reads before GetOrganelle (replaces old hardcoded 5G)
+# 0 or null → feed all reads straight through.
+subsample_gb: 5
+
+# Optional upstream adapter trimming (fastp). Disabled by default because
+# the project convention expects adapter-removed reads (e.g. *.clean.fq.gz).
+# Authors of NOVOPlasty and GetOrganelle recommend AGAINST Phred quality
+# trimming — the flags below do adapter-only trimming.
+fastp:
+  enabled: false
+  extra_args: ''                            # e.g. '-G' to also disable polyG trim on NovaSeq data
 
 seed_input:
 genes:

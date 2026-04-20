@@ -45,12 +45,12 @@ def _detect_samples(reads_dir, suffix_fq):
 
 # optional configs
 @click.option('--genetic_code', help='the genetic code table', type=int, default=DEFAULT_CONFIG['genetic_code'], show_default=True)
-@click.option('--genome_min_size', help='the min size of genome', type=int, default=DEFAULT_CONFIG['genome_min_size'], show_default=True)
-@click.option('--genome_max_size', help='the max size of genome', type=int, default=DEFAULT_CONFIG['genome_max_size'], show_default=True)
+@click.option('--novoplasty_genome_min_size', help='NOVOPlasty: min expected genome size (bp)', type=int, default=DEFAULT_CONFIG['novoplasty_genome_min_size'], show_default=True)
+@click.option('--novoplasty_genome_max_size', help='NOVOPlasty: max expected genome size (bp)', type=int, default=DEFAULT_CONFIG['novoplasty_genome_max_size'], show_default=True)
 @click.option('--insert_size', help='the in', type=int, default=DEFAULT_CONFIG['insert_size'], show_default=True)
-@click.option('--kmer_size', help='the K-mer size used in NOVOPlasty assembly', type=int, default=DEFAULT_CONFIG['kmer_size'], show_default=True)
+@click.option('--novoplasty_kmer_size', help='NOVOPlasty: K-mer size for assembly', type=int, default=DEFAULT_CONFIG['novoplasty_kmer_size'], show_default=True)
 @click.option('--read_length', help='the read length of Illumina short reads', type=int, default=DEFAULT_CONFIG['read_length'], show_default=True)
-@click.option('--max_mem_gb', help='the limit of RAM usage for NOVOPlasty (unit: GB)', type=int, default=DEFAULT_CONFIG['max_mem_gb'], show_default=True)
+@click.option('--novoplasty_max_mem_gb', help='NOVOPlasty: RAM limit (GB)', type=int, default=DEFAULT_CONFIG['novoplasty_max_mem_gb'], show_default=True)
 
 @click.option('--suffix_fq',
               help='paired fastq suffixes for auto-detecting samples (R1,R2 per pair; pairs separated by ";"). '
@@ -81,8 +81,8 @@ def run(**kwargs):
     configs = {}
     arguments = (
         'reads_dir result_dir organelle_database samples '
-        'genetic_code genome_min_size genome_max_size insert_size kmer_size '
-        'read_length max_mem_gb seed_input genes fq_path_pattern '
+        'genetic_code novoplasty_genome_min_size novoplasty_genome_max_size insert_size novoplasty_kmer_size '
+        'read_length novoplasty_max_mem_gb seed_input genes fq_path_pattern '
     ).strip().split()
     for key in arguments:
         configs[key] = kwargs[key]

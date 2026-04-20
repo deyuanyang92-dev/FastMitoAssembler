@@ -55,13 +55,13 @@ _SAMPLE_CONFIG = {
     'insert_size': 300,
     'meangs_reads': 2000000,
     'meangs_deepin': True,
-    'kmer_size': 33,
-    'genome_min_size': 12000,
-    'genome_max_size': 22000,
-    'max_mem_gb': 10,
+    'novoplasty_kmer_size': 33,
+    'novoplasty_genome_min_size': 12000,
+    'novoplasty_genome_max_size': 22000,
+    'novoplasty_max_mem_gb': 10,
     'organelle_database': 'animal_mt',
     'genetic_code': 5,
-    'clade': 'Annelida-segmented-worms',
+    'mitoz_clade': 'Annelida-segmented-worms',
 }
 
 
