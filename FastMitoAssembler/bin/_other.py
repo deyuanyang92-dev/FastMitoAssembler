@@ -9,6 +9,14 @@ GETORGANELLE_ENV_YAML = BASE_DIR / 'smk' / 'envs' / 'getorganelle.yaml'
 
 NCBI_TAXDUMP = 'https://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz'
 
+# Named conda environments for each tool (created by `fma prepare tools`)
+TOOL_ENVS = {
+    'meangs':       ('FastMitoAssembler-meangs',       'meangs.yaml'),
+    'novoplasty':   ('FastMitoAssembler-novoplasty',   'novoplasty.yaml'),
+    'getorganelle': ('FastMitoAssembler-getorganelle', 'getorganelle.yaml'),
+    'mitoz':        ('FastMitoAssembler-mitoz',        'mitoz.yaml'),
+}
+
 @click.group(help=click.style('prepare database', fg='cyan', bold=True))
 def prepare():
     pass
@@ -83,3 +91,79 @@ def organelle(**kwargs):
             status, output = util.getstatusoutput(
                 f'{runner}get_organelle_config.py --add {database}')
             click.secho(output)
+
+
+def _conda_env_exists(env_name):
+    status, _ = util.getstatusoutput(f'conda env list 2>/dev/null | grep -q "^{env_name} "')
+    return status == 0
+
+
+@prepare.command('tools', help='create dedicated conda environments for all bioinformatics tools')
+@click.option('--force', is_flag=True, help='remove and recreate an environment if it already exists')
+@click.option('--save/--no-save', default=True, show_default=True,
+              help='save created env names to global config (~/.config/FastMitoAssembler/tool_envs.yaml)')
+@click.option('--tool', 'selected',
+              type=click.Choice(list(TOOL_ENVS.keys())),
+              multiple=True,
+              help='install only specific tools (default: all)')
+def prepare_tools(force, save, selected):
+    """Create named conda environments for MEANGS, NOVOPlasty, GetOrganelle and MitoZ.
+
+    Each tool is installed into its own isolated environment so upgrading one
+    tool never breaks the others.  After creation the env names are saved
+    globally so every subsequent `fma run` uses them automatically.
+    """
+    from FastMitoAssembler.bin._check import GLOBAL_TOOL_ENVS_PATH
+    import yaml as _yaml
+
+    tools_to_build = list(selected) if selected else list(TOOL_ENVS.keys())
+
+    click.secho('\nInstalling tool environments...\n', bold=True)
+
+    created = {}
+    for tool in tools_to_build:
+        env_name, yaml_name = TOOL_ENVS[tool]
+        env_yaml = BASE_DIR / 'smk' / 'envs' / yaml_name
+
+        if _conda_env_exists(env_name) and not force:
+            click.secho(f'  {tool:<16} ✓ already exists  ({env_name})', fg='green')
+            created[tool] = env_name
+            continue
+
+        if force and _conda_env_exists(env_name):
+            click.secho(f'  {tool:<16} removing old env...', fg='yellow')
+            util.getstatusoutput(f'conda env remove -n {env_name} -y')
+
+        click.secho(f'  {tool:<16} creating {env_name} ...', fg='cyan')
+        # prefer mamba for speed, fall back to conda
+        for installer in ('mamba', 'conda'):
+            st, _ = util.getstatusoutput(f'which {installer}')
+            if st == 0:
+                break
+        status, output = util.getstatusoutput(
+            f'{installer} env create -n {env_name} -f {env_yaml} 2>&1'
+        )
+        if status == 0:
+            click.secho(f'  {tool:<16} ✓ done  ({env_name})', fg='green')
+            created[tool] = env_name
+        else:
+            click.secho(f'  {tool:<16} ✗ failed\n{output}', fg='red')
+
+    click.echo()
+
+    if save and created:
+        existing = {}
+        if GLOBAL_TOOL_ENVS_PATH.exists():
+            existing = util.read_yaml(GLOBAL_TOOL_ENVS_PATH) or {}
+        for tool, env_name in created.items():
+            existing[tool] = {'conda_env': env_name, 'bin_dir': ''}
+        GLOBAL_TOOL_ENVS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(GLOBAL_TOOL_ENVS_PATH, 'w') as f:
+            _yaml.dump(existing, f, default_flow_style=False, allow_unicode=True)
+        click.secho(f'Tool configs saved to {GLOBAL_TOOL_ENVS_PATH}', fg='green')
+        click.secho(
+            'All future `fma run` calls will use these environments automatically.',
+            fg='cyan',
+        )
+    elif not created:
+        click.secho('No environments were created.', fg='yellow')

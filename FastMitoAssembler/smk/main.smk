@@ -40,6 +40,8 @@ MEANGS_THREAD = config.get('meangs_thread', 4)
 MEANGS_READS  = config.get('meangs_reads', 2000000)
 MEANGS_DEEPIN = config.get('meangs_deepin', True)
 MEANGS_CLADE  = config.get('meangs_clade', 'Annelida-segmented-worms')
+# Cleanup intermediate files after each step
+CLEANUP = config.get('cleanup', False)
 # ==============================================================
 
 # ==============================================================
@@ -57,6 +59,20 @@ def _shell_prefix(tool):
     if bin_dir:
         return f'PATH="{bin_dir}:$PATH" '
     return ''
+
+def _tool_cmd(tool, default_cmd):
+    """Return the shell command to invoke a tool.
+
+    If the tool has a script_path configured (e.g. NOVOPlasty.pl), the command
+    becomes 'perl /abs/path/to/script' instead of the default binary name.
+    """
+    cfg = _TOOL_ENVS.get(tool) or {}
+    if not isinstance(cfg, dict):
+        return default_cmd
+    script_path = (cfg.get('script_path') or '').strip()
+    if script_path:
+        return f'perl {Path(script_path).expanduser().resolve()}'
+    return default_cmd
 # ==============================================================
 
 # ==============================================================
@@ -79,6 +95,7 @@ seed_fas = MEANGS_DIR("{sample}_deep_detected_mito.fas")
 novoplasty_config = NOVOPLASTY_DIR("config.txt")
 novoplasty_fasta = NOVOPLASTY_DIR("{sample}.novoplasty.fasta")
 organelle_fasta_new = ORGANELLE_DIR(f"{ORGANELLE_DB}.get_organelle.fasta")
+mm_report = partial(SAMPLE_DIR, "materials_and_methods.md")
 # ==============================================================
 
 # ==============================================================
@@ -105,6 +122,7 @@ rule all:
         expand(MITOZ_ANNO_RESULT_DIR("circos.png"), sample=SAMPLES),
         expand(MITOZ_ANNO_RESULT_DIR("summary.txt"), sample=SAMPLES),
         expand(MITOZ_ANNO_RESULT_DIR(f"{{sample}}_{ORGANELLE_DB}.get_organelle.fasta_mitoscaf.fa.gbf"), sample=SAMPLES),
+        expand(mm_report(), sample=SAMPLES),
     run:
         print('ok')
 
@@ -141,6 +159,7 @@ rule MEANGS:
         meangs_clade=MEANGS_CLADE,
         deepin_flag='--deepin' if MEANGS_DEEPIN else '',
         insert_size=INSERT_SIZE,
+        cleanup=CLEANUP,
     conda: "envs/meangs.yaml"
     message: "MEANGS for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'meangs.log')
@@ -177,6 +196,10 @@ rule MEANGS:
                 meangs_out={wildcards.sample}/mito.fasta
             fi
             seqkit head -n1 -w0 -o {output.seed_fas} $meangs_out
+
+            if [ "{params.cleanup}" = "True" ]; then
+                rm -rf {wildcards.sample}/
+            fi
         fi) 2>{log}.err 1>{log}
         """
 
@@ -239,6 +262,8 @@ rule NOVOPlasty:
     params:
         output_path=NOVOPLASTY_DIR(),
         tool_prefix=_shell_prefix('novoplasty'),
+        novoplasty_cmd=_tool_cmd('novoplasty', 'NOVOPlasty.pl'),
+        cleanup=CLEANUP,
     conda: "envs/novoplasty.yaml"
     message: "NOVOPlasty for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'novoplasty.log')
@@ -248,13 +273,18 @@ rule NOVOPlasty:
         (
         cd {params.output_path}
 
-        {params.tool_prefix}NOVOPlasty.pl -c {input.novoplasty_config}
+        {params.tool_prefix}{params.novoplasty_cmd} -c {input.novoplasty_config}
 
         # remove +xxx
         seqkit replace -w0 \\
             -p "\+.+" -r "" \\
             -o {output.novoplasty_fasta} \\
             *{wildcards.sample}.fasta
+
+        if [ "{params.cleanup}" = "True" ]; then
+            rm -f contigs_tmp_{wildcards.sample}.txt \
+                  log_{wildcards.sample}.txt
+        fi
         ) 2>{log}.err 1>{log}
         """
 
@@ -286,6 +316,7 @@ rule GetOrganelle:
         output_path=ORGANELLE_DIR(),
         output_path_temp=ORGANELLE_DIR("organelle"),
         tool_prefix=_shell_prefix('getorganelle'),
+        cleanup=CLEANUP,
     conda: "envs/getorganelle.yaml"
     message: "GetOrganelle for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'get_organelle.log')
@@ -331,6 +362,14 @@ rule GetOrganelle:
         seqkit replace -w0 \\
             -p "^scaffold.*" -r "{wildcards.sample} topology=linear" \\
             -o {output.organelle_fasta_new}
+
+        if [ "{params.cleanup}" = "True" ]; then
+            rm -rf organelle/filtered_spades/
+            rm -f organelle/extended*.fq
+            rm -f {wildcards.sample}_1.5G.fq.gz \
+                  {wildcards.sample}_2.5G.fq.gz \
+                  {wildcards.sample}.fq1.stats.txt
+        fi
         ) 2>{log}.err 1>{log}
     """
 
@@ -360,6 +399,7 @@ rule MitozAnnotate:
     params:
         outdir=MITOZ_ANNO_DIR(),
         tool_prefix=_shell_prefix('mitoz'),
+        cleanup=CLEANUP,
     conda: "envs/mitoz.yaml"
     message: "MitozAnnotate for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'mitoz_annotate.log')
@@ -379,5 +419,30 @@ rule MitozAnnotate:
             --species_name "{wildcards.sample}" \\
             --genetic_code {GENETIC_CODE} \\
             --clade {CLADE}
+
+        if [ "{params.cleanup}" = "True" ]; then
+            rm -f {params.outdir}/tmp_*
+        fi
         ) 2>{log}.err 1>{log}
         """
+
+rule GenerateReport:
+    """
+    Generate a bilingual (English + Chinese) Materials & Methods section
+    for SCI papers, summarising tools, versions, and parameters used.
+    Output: {RESULT_DIR}/{sample}/materials_and_methods.md
+    """
+    input:
+        circos=MITOZ_ANNO_RESULT_DIR("circos.png"),
+        summary=MITOZ_ANNO_RESULT_DIR("summary.txt"),
+    output:
+        report=mm_report(),
+    message: "GenerateReport for sample: {wildcards.sample}"
+    run:
+        from FastMitoAssembler.report import generate_mm_report
+        generate_mm_report(
+            output_path=output.report,
+            sample=wildcards.sample,
+            cfg=config,
+            tool_envs=_TOOL_ENVS,
+        )

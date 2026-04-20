@@ -27,6 +27,8 @@ meangs_clade: 'Annelida-segmented-worms'
 #   Cnidaria                 # 刺胞动物
 #   Others                   # 其他
 
+cleanup: false       # set true to remove intermediate files after each tool step
+
 seed_input:
 genes:
 
