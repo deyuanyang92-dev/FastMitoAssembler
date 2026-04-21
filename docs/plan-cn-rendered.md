@@ -195,7 +195,7 @@ fma clean --stage mitoz              # 只清 tmp_*
 | `FastMitoAssembler/bin/main.py` | 注册 8 个新子命令 |
 | `FastMitoAssembler/bin/_run.py` | 抽取配置合并 + snakemake 调用逻辑到共享 helper；`run` 命令行为保持不变 |
 | `FastMitoAssembler/smk/main.smk` | 添加 `pipeline_stages` 分发逻辑；`GetOrganelle` 规则用 `unpack()` 条件输入；shell 命令可选包含 `-s` / `--genes` / `--genomes`；新增 target 别名规则 |
-| `FastMitoAssembler/smk/config.yaml` | 新增 `pipeline_stages`、`getorganelle_opts` |
+| `FastMitoAssembler/smk/config.yaml` | 新增 `pipeline_stages`（其余 `getorganelle_*` / `subsample_gb` / `fastp.*` 已于 2026-04-21 落地） |
 
 ### 新建
 | 文件 | 作用 |
