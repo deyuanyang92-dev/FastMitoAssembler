@@ -13,7 +13,7 @@ environment so the beta does not disturb an existing production installation.
 
 ```bash
 mamba create -n FastMitoAssembler-v002 -c conda-forge -c bioconda \
-    python=3.9 "snakemake>=7" click jinja2 pyyaml ete3
+    python=3.9 "snakemake>=7,<8" "pulp<2.8" click jinja2 pyyaml ete3
 
 conda activate FastMitoAssembler-v002
 ```

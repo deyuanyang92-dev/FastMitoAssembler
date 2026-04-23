@@ -41,7 +41,7 @@ rule NOVOPlasty:
         tool_prefix=_shell_prefix('novoplasty'),
         novoplasty_cmd=_tool_cmd('novoplasty', 'NOVOPlasty.pl'),
         cleanup=CLEANUP,
-    conda: "envs/novoplasty.yaml"
+    conda: "../envs/novoplasty.yaml"
     message: "NOVOPlasty for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'novoplasty.log')
     benchmark: BENCHMARK_DIR.joinpath('{sample}', 'novoplasty.stat')

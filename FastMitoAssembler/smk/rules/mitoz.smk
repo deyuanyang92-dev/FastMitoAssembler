@@ -14,7 +14,7 @@ rule MitozAnnotate:
         outdir=MITOZ_ANNO_DIR(),
         tool_prefix=_shell_prefix('mitoz'),
         cleanup=CLEANUP,
-    conda: "envs/mitoz.yaml"
+    conda: "../envs/mitoz.yaml"
     message: "MitozAnnotate for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'mitoz_annotate.log')
     benchmark: BENCHMARK_DIR.joinpath('{sample}', 'mitoz_annotate.stat')

@@ -17,7 +17,7 @@ if FASTP_ENABLED:
             outdir=FASTP_DIR(),
             extra=FASTP_EXTRA,
             tool_prefix=_shell_prefix('fastp'),
-        conda: "envs/fastp.yaml"
+        conda: "../envs/fastp.yaml"
         message: "fastp (adapter-only) for sample: {wildcards.sample}"
         log: LOG_DIR.joinpath('{sample}', 'fastp.log')
         benchmark: BENCHMARK_DIR.joinpath('{sample}', 'fastp.stat')

@@ -1,4 +1,5 @@
 click
 jinja2
 pyyaml
-snakemake
+snakemake>=7,<8
+pulp<2.8

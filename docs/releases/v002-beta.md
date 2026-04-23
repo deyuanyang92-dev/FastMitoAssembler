@@ -26,6 +26,9 @@ not marked as a production release.
 - Added v002 design documents, software research notes, and a workflow
   flowchart.
 - Updated package version metadata to `0.0.2b0`.
+- Fixed module-rule conda environment paths after the Snakefile split.
+- Pinned the main environment to `snakemake>=7,<8` and `pulp<2.8` for
+  Snakemake 7 compatibility.
 
 ## Testing focus
 

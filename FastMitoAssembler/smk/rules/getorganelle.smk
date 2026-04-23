@@ -16,7 +16,7 @@ rule GetOrganelle:
         seed_arg=lambda wildcards, input: f"-s {input.seed}" if input.seed else "",
         subsample_reads=SUBSAMPLE_READS,
         cleanup=CLEANUP,
-    conda: "envs/getorganelle.yaml"
+    conda: "../envs/getorganelle.yaml"
     message: "GetOrganelle for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'get_organelle.log')
     benchmark: BENCHMARK_DIR.joinpath('{sample}', 'get_organelle.stat')

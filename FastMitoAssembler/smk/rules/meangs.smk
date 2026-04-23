@@ -43,7 +43,7 @@ rule MEANGS:
         deepin_flag='--deepin' if MEANGS_DEEPIN else '',
         insert_size=INSERT_SIZE,
         cleanup=CLEANUP,
-    conda: "envs/meangs.yaml"
+    conda: "../envs/meangs.yaml"
     message: "MEANGS for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'meangs.log')
     benchmark: BENCHMARK_DIR.joinpath('{sample}', 'meangs.stat')

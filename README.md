@@ -68,7 +68,7 @@ dependency conflicts. Choose the path that fits your situation:
 ```bash
 # mamba is strongly recommended over conda for speed
 mamba create -n FastMitoAssembler -c conda-forge \
-    python=3.9 "snakemake>=7" click jinja2 pyyaml ete3
+    python=3.9 "snakemake>=7,<8" "pulp<2.8" click jinja2 pyyaml ete3
 
 conda activate FastMitoAssembler
 ```
@@ -139,7 +139,7 @@ in existing conda environments, or in a local directory), do the following:
 
 ```bash
 mamba create -n FastMitoAssembler -c conda-forge \
-    python=3.9 "snakemake>=7" click jinja2 pyyaml ete3
+    python=3.9 "snakemake>=7,<8" "pulp<2.8" click jinja2 pyyaml ete3
 conda activate FastMitoAssembler
 pip install git+https://github.com/deyuanyang92-dev/FastMitoAssembler.git
 ```
