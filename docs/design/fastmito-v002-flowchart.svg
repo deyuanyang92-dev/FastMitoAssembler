@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1320" viewBox="0 0 1800 1320">
+  <defs>
+    <style>
+      .title { font-family: Arial, "Noto Sans CJK SC", sans-serif; font-size: 34px; font-weight: 700; fill: #1f2937; }
+      .subtitle { font-family: Arial, "Noto Sans CJK SC", sans-serif; font-size: 18px; fill: #4b5563; }
+      .lane { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; }
+      .lane-title { font-family: Arial, "Noto Sans CJK SC", sans-serif; font-size: 20px; font-weight: 700; fill: #334155; }
+      .box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 8; ry: 8; }
+      .tool { fill: #ecfeff; stroke: #0891b2; stroke-width: 2; rx: 8; ry: 8; }
+      .summary { fill: #fef3c7; stroke: #d97706; stroke-width: 2; rx: 8; ry: 8; }
+      .warn { fill: #fee2e2; stroke: #dc2626; stroke-width: 2; rx: 8; ry: 8; }
+      .output { fill: #ecfdf5; stroke: #059669; stroke-width: 2; rx: 8; ry: 8; }
+      .text { font-family: Arial, "Noto Sans CJK SC", sans-serif; font-size: 17px; fill: #111827; }
+      .small { font-family: Arial, "Noto Sans CJK SC", sans-serif; font-size: 14px; fill: #374151; }
+      .edge { stroke: #475569; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .edge2 { stroke: #0f766e; stroke-width: 2.2; fill: none; marker-end: url(#arrow2); }
+      .edge3 { stroke: #b45309; stroke-width: 2.2; fill: none; marker-end: url(#arrow3); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0f766e"/>
+    </marker>
+    <marker id="arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+
+  <text x="50" y="54" class="title">FastMitoAssembler v002 workflow flowchart</text>
+  <text x="50" y="84" class="subtitle">Python dispatch + Snakemake DAG + external tools. MitoZ defaults to annotation; summary FASTA is the bridge.</text>
+
+  <rect x="40" y="120" width="1720" height="150" class="lane"/>
+  <text x="60" y="150" class="lane-title">1. Input and optional preprocessing</text>
+  <rect x="80" y="178" width="220" height="58" class="box"/>
+  <text x="105" y="203" class="text">Batch FASTQ input</text>
+  <text x="105" y="225" class="small">paired-end by default</text>
+  <rect x="380" y="178" width="250" height="58" class="box"/>
+  <text x="407" y="203" class="text">Optional fastp</text>
+  <text x="407" y="225" class="small">off by default; adapter-only</text>
+  <rect x="710" y="178" width="230" height="58" class="output"/>
+  <text x="742" y="203" class="text">Reads for workflow</text>
+  <text x="742" y="225" class="small">raw or fastp-cleaned</text>
+  <path d="M300 207 H380" class="edge"/>
+  <path d="M630 207 H710" class="edge"/>
+
+  <rect x="40" y="300" width="1720" height="300" class="lane"/>
+  <text x="60" y="330" class="lane-title">2. User-facing subcommands select Snakemake targets</text>
+  <rect x="80" y="368" width="210" height="70" class="tool"/>
+  <text x="105" y="394" class="text">fma meangs</text>
+  <text x="105" y="418" class="small">target: meangs_all</text>
+  <rect x="330" y="368" width="230" height="70" class="tool"/>
+  <text x="355" y="394" class="text">fma novoplasty</text>
+  <text x="355" y="418" class="small">target: novoplasty_all</text>
+  <rect x="600" y="368" width="245" height="70" class="tool"/>
+  <text x="625" y="394" class="text">fma getorganelle</text>
+  <text x="625" y="418" class="small">target: getorganelle_all</text>
+  <rect x="885" y="368" width="210" height="70" class="tool"/>
+  <text x="910" y="394" class="text">fma mitoz</text>
+  <text x="910" y="418" class="small">target: mitoz_all</text>
+  <rect x="80" y="480" width="210" height="70" class="tool"/>
+  <text x="105" y="506" class="text">fma mg-nov</text>
+  <text x="105" y="530" class="small">MEANGS -> NOVOPlasty</text>
+  <rect x="330" y="480" width="230" height="70" class="tool"/>
+  <text x="355" y="506" class="text">fma mg-get</text>
+  <text x="355" y="530" class="small">MEANGS -> GetOrganelle</text>
+  <rect x="600" y="480" width="245" height="70" class="tool"/>
+  <text x="625" y="506" class="text">fma mg-nov-get</text>
+  <text x="625" y="530" class="small">MEANGS -> NOVOPlasty -> GetOrganelle</text>
+  <rect x="885" y="480" width="210" height="70" class="tool"/>
+  <text x="910" y="506" class="text">fma run</text>
+  <text x="910" y="530" class="small">full chain + report</text>
+  <path d="M825 236 V310 H185 V368" class="edge"/>
+  <path d="M825 236 V310 H445 V368" class="edge"/>
+  <path d="M825 236 V310 H722 V368" class="edge"/>
+  <path d="M825 236 V310 H990 V368" class="edge"/>
+
+  <rect x="40" y="630" width="1720" height="315" class="lane"/>
+  <text x="60" y="660" class="lane-title">3. External tool execution and supported combinations</text>
+  <rect x="90" y="700" width="235" height="78" class="tool"/>
+  <text x="118" y="728" class="text">MEANGS</text>
+  <text x="118" y="752" class="small">candidate mt FASTA</text>
+  <text x="118" y="772" class="small">*_deep_detected_mito.fas</text>
+  <rect x="415" y="700" width="255" height="78" class="tool"/>
+  <text x="445" y="728" class="text">NOVOPlasty</text>
+  <text x="445" y="752" class="small">seed-driven assembly</text>
+  <text x="445" y="772" class="small">config.txt per sample</text>
+  <rect x="760" y="700" width="270" height="78" class="tool"/>
+  <text x="790" y="728" class="text">GetOrganelle</text>
+  <text x="790" y="752" class="small">mt / pt / nr assembly</text>
+  <text x="790" y="772" class="small">path_sequence + graph</text>
+  <rect x="1120" y="700" width="250" height="78" class="tool"/>
+  <text x="1150" y="728" class="text">MitoZ annotate</text>
+  <text x="1150" y="752" class="small">default annotation backend</text>
+  <text x="1150" y="772" class="small">not default assembler</text>
+  <path d="M325 739 H415" class="edge2"/>
+  <path d="M670 739 H760" class="edge2"/>
+  <path d="M1030 739 H1120" class="edge2"/>
+
+  <rect x="90" y="825" width="280" height="70" class="box"/>
+  <text x="116" y="852" class="text">MEANGS -> NOVOPlasty</text>
+  <text x="116" y="875" class="small">reduces manual NOVOPlasty seed setup</text>
+  <rect x="430" y="825" width="300" height="70" class="box"/>
+  <text x="456" y="852" class="text">MEANGS -> GetOrganelle</text>
+  <text x="456" y="875" class="small">skip NOVOPlasty when needed</text>
+  <rect x="790" y="825" width="360" height="70" class="box"/>
+  <text x="816" y="852" class="text">MEANGS -> NOVOPlasty -> GetOrganelle</text>
+  <text x="816" y="875" class="small">strong default assembly chain</text>
+  <rect x="1210" y="825" width="300" height="70" class="box"/>
+  <text x="1236" y="852" class="text">Full: + MitoZ annotation</text>
+  <text x="1236" y="875" class="small">preserve current high-success route</text>
+
+  <rect x="40" y="975" width="1720" height="235" class="lane"/>
+  <text x="60" y="1005" class="lane-title">4. Summary and review layer</text>
+  <rect x="110" y="1050" width="290" height="88" class="summary"/>
+  <text x="138" y="1080" class="text">Summary FASTA</text>
+  <text x="138" y="1104" class="small">{sample}.{software_or_pipeline}.fasta</text>
+  <text x="138" y="1124" class="small">used by MitoZ annotate</text>
+  <rect x="470" y="1050" width="280" height="88" class="summary"/>
+  <text x="498" y="1080" class="text">summary_report.tsv</text>
+  <text x="498" y="1104" class="small">source, length, topology</text>
+  <text x="498" y="1124" class="small">QC and failure status</text>
+  <rect x="825" y="1050" width="340" height="88" class="output"/>
+  <text x="853" y="1080" class="text">MitoZ annotation outputs</text>
+  <text x="853" y="1104" class="small">GBF, gene FASTA, summary.txt</text>
+  <text x="853" y="1124" class="small">plots and annotation report</text>
+  <rect x="1240" y="1050" width="360" height="88" class="warn"/>
+  <text x="1268" y="1080" class="text">Manual review flags</text>
+  <text x="1268" y="1104" class="small">contamination risk, topology unknown</text>
+  <text x="1268" y="1124" class="small">discordant tools or abnormal length</text>
+  <path d="M895 778 V1050 H400" class="edge3"/>
+  <path d="M1245 778 V1015 H965 V1050" class="edge3"/>
+  <path d="M400 1094 H470" class="edge"/>
+  <path d="M750 1094 H825" class="edge"/>
+  <path d="M1165 1094 H1240" class="edge"/>
+
+  <text x="60" y="1260" class="subtitle">Important: MEANGS scaffold_seeds.fas is CWD-sensitive; batch execution must isolate each sample working directory.</text>
+  <text x="60" y="1288" class="subtitle">Summary chooses the last assembler output: mg-nov = NOVOPlasty; mg-get/mg-nov-get/run = GetOrganelle; MitoZ annotates by default.</text>
+</svg>

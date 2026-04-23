@@ -1,0 +1,177 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Length 10269 >>
+stream
+BT 0.05 0.07 0.1 rg /F2 24 Tf 40.0 1015.0 Td (FastMitoAssembler v002 workflow check diagram) Tj ET
+BT 0.05 0.07 0.1 rg /F1 12 Tf 40.0 990.0 Td (Goal: independent batch runs plus composable MEANGS / NOVOPlasty / GetOrganelle / MitoZ workflows.) Tj ET
+1 1 1 rg 0.2 0.25 0.33 RG 1.8 w 40.0 900.0 190.0 58.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 54.0 934.0 Td (Batch FASTQ) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 54.0 912.0 Td (paired-end default) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 54.0 896.0 Td (sample detection) Tj ET
+1 1 1 rg 0.2 0.25 0.33 RG 1.8 w 280.0 900.0 190.0 58.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 294.0 934.0 Td (Optional fastp) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 294.0 912.0 Td (disabled by default) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 294.0 896.0 Td (adapter-only: -Q -L) Tj ET
+0.93 0.99 0.96 rg 0.03 0.59 0.41 RG 1.8 w 520.0 900.0 190.0 58.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 534.0 934.0 Td (Reads for DAG) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 534.0 912.0 Td (raw or fastp-cleaned) Tj ET
+0.28 0.34 0.42 RG 1.5 w 230.0 929.0 m 280.0 929.0 l S
+0.28 0.34 0.42 rg 280.0 929.0 m 271.1 933.5 l 271.1 924.5 l f
+0.28 0.34 0.42 RG 1.5 w 470.0 929.0 m 520.0 929.0 l S
+0.28 0.34 0.42 rg 520.0 929.0 m 511.1 933.5 l 511.1 924.5 l f
+BT 0.05 0.07 0.1 rg /F2 16 Tf 40.0 855.0 Td (User commands -> Snakemake targets) Tj ET
+0.94 0.96 1.0 rg 0.25 0.36 0.72 RG 1.8 w 40.0 790.0 190.0 54.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 54.0 820.0 Td (fma meangs) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 54.0 798.0 Td (meangs_all) Tj ET
+0.94 0.96 1.0 rg 0.25 0.36 0.72 RG 1.8 w 250.0 790.0 190.0 54.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 264.0 820.0 Td (fma novoplasty) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 264.0 798.0 Td (novoplasty_all) Tj ET
+0.94 0.96 1.0 rg 0.25 0.36 0.72 RG 1.8 w 480.0 790.0 230.0 54.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 494.0 820.0 Td (fma getorganelle) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 494.0 798.0 Td (getorganelle_all) Tj ET
+0.94 0.96 1.0 rg 0.25 0.36 0.72 RG 1.8 w 730.0 790.0 230.0 54.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 744.0 820.0 Td (fma mitoz) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 744.0 798.0 Td (mitoz_all) Tj ET
+0.94 0.96 1.0 rg 0.25 0.36 0.72 RG 1.8 w 40.0 710.0 190.0 54.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 54.0 740.0 Td (fma mg-nov) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 54.0 718.0 Td (MEANGS -> NOVOPlasty) Tj ET
+0.94 0.96 1.0 rg 0.25 0.36 0.72 RG 1.8 w 250.0 710.0 190.0 54.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 264.0 740.0 Td (fma mg-get) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 264.0 718.0 Td (MEANGS -> GetOrganelle) Tj ET
+0.94 0.96 1.0 rg 0.25 0.36 0.72 RG 1.8 w 480.0 710.0 230.0 54.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 494.0 740.0 Td (fma mg-nov-get) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 494.0 718.0 Td (MEANGS -> NOVOPlasty -> GetOrganelle) Tj ET
+0.94 0.96 1.0 rg 0.25 0.36 0.72 RG 1.8 w 790.0 710.0 230.0 54.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 804.0 740.0 Td (fma run) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 804.0 718.0 Td (full chain + MitoZ annotate) Tj ET
+0.28 0.34 0.42 RG 1.5 w 615.0 900.0 m 135.0 844.0 l S
+0.28 0.34 0.42 rg 135.0 844.0 m 144.4 840.5 l 143.3 849.5 l f
+0.28 0.34 0.42 RG 1.5 w 615.0 900.0 m 360.0 844.0 l S
+0.28 0.34 0.42 rg 360.0 844.0 m 369.7 841.5 l 367.7 850.3 l f
+0.28 0.34 0.42 RG 1.5 w 615.0 900.0 m 595.0 844.0 l S
+0.28 0.34 0.42 rg 595.0 844.0 m 602.3 850.9 l 593.7 853.9 l f
+0.28 0.34 0.42 RG 1.5 w 615.0 900.0 m 845.0 844.0 l S
+0.28 0.34 0.42 rg 845.0 844.0 m 837.4 850.5 l 835.3 841.7 l f
+BT 0.05 0.07 0.1 rg /F2 16 Tf 40.0 650.0 Td (External tools: called by Snakemake; algorithms are not reimplemented) Tj ET
+0.93 0.99 1.0 rg 0.03 0.57 0.7 RG 1.8 w 70.0 560.0 220.0 70.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 84.0 606.0 Td (MEANGS) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 84.0 584.0 Td (candidate mt FASTA) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 84.0 568.0 Td (*_deep_detected_mito.fas) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 84.0 552.0 Td (species_class, nsample) Tj ET
+0.93 0.99 1.0 rg 0.03 0.57 0.7 RG 1.8 w 360.0 560.0 230.0 70.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 374.0 606.0 Td (NOVOPlasty) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 374.0 584.0 Td (per-sample config.txt) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 374.0 568.0 Td (single or by-sample seed) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 374.0 552.0 Td ({sample}.novoplasty.fasta) Tj ET
+0.93 0.99 1.0 rg 0.03 0.57 0.7 RG 1.8 w 660.0 560.0 250.0 70.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 674.0 606.0 Td (GetOrganelle) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 674.0 584.0 Td (mt / pt / nr) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 674.0 568.0 Td (path_sequence.fasta) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 674.0 552.0 Td (graph + log retained) Tj ET
+0.93 0.99 1.0 rg 0.03 0.57 0.7 RG 1.8 w 980.0 560.0 220.0 70.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 994.0 606.0 Td (MitoZ annotate) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 994.0 584.0 Td (summary FASTA input) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 994.0 568.0 Td (GBF, gene FASTA, summary.txt) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 994.0 552.0 Td (not default assembler) Tj ET
+0.04 0.47 0.43 RG 1.5 w 290.0 595.0 m 360.0 595.0 l S
+0.04 0.47 0.43 rg 360.0 595.0 m 351.1 599.5 l 351.1 590.5 l f
+0.04 0.47 0.43 RG 1.5 w 590.0 595.0 m 660.0 595.0 l S
+0.04 0.47 0.43 rg 660.0 595.0 m 651.1 599.5 l 651.1 590.5 l f
+0.04 0.47 0.43 RG 1.5 w 910.0 595.0 m 980.0 595.0 l S
+0.04 0.47 0.43 rg 980.0 595.0 m 971.1 599.5 l 971.1 590.5 l f
+1 1 1 rg 0.2 0.25 0.33 RG 1.8 w 70.0 455.0 250.0 58.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 84.0 489.0 Td (mg-nov) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 84.0 467.0 Td (MEANGS seed -> NOVOPlasty) Tj ET
+1 1 1 rg 0.2 0.25 0.33 RG 1.8 w 360.0 455.0 250.0 58.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 374.0 489.0 Td (mg-get) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 374.0 467.0 Td (MEANGS seed -> GetOrganelle) Tj ET
+1 1 1 rg 0.2 0.25 0.33 RG 1.8 w 650.0 455.0 310.0 58.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 664.0 489.0 Td (mg-nov-get) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 664.0 467.0 Td (MEANGS -> NOVOPlasty -> GetOrganelle) Tj ET
+1 1 1 rg 0.2 0.25 0.33 RG 1.8 w 1000.0 455.0 270.0 58.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 1014.0 489.0 Td (run) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 1014.0 467.0 Td (MEANGS -> NOVOPlasty -> GetOrganelle -> MitoZ annotate) Tj ET
+BT 0.05 0.07 0.1 rg /F2 16 Tf 40.0 405.0 Td (Seed, output, and summary rules) Tj ET
+1.0 0.9 0.9 rg 0.86 0.15 0.15 RG 1.8 w 60.0 300.0 285.0 74.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 74.0 350.0 Td (MEANGS caution) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 74.0 328.0 Td (scaffold_seeds.fas is written in CWD) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 74.0 312.0 Td (batch runs must isolate sample workdirs) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 74.0 296.0 Td (-n takes first nsample records per input) Tj ET
+1.0 0.95 0.78 rg 0.85 0.47 0.02 RG 1.8 w 390.0 300.0 285.0 74.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 404.0 350.0 Td (Seed system) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 404.0 328.0 Td (single seed for all samples) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 404.0 312.0 Td (by-sample FASTA header token) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 404.0 296.0 Td (MEANGS output as automatic seed) Tj ET
+1.0 0.95 0.78 rg 0.85 0.47 0.02 RG 1.8 w 720.0 300.0 285.0 74.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 734.0 350.0 Td (GetOrganelle outputs) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 734.0 328.0 Td (collect path_sequence.fasta) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 734.0 312.0 Td (retain selected_graph.gfa and logs) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 734.0 296.0 Td (nr via embplant_nr/fungus_nr/anonym) Tj ET
+0.93 0.99 0.96 rg 0.03 0.59 0.41 RG 1.8 w 1050.0 300.0 285.0 74.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 1064.0 350.0 Td (MitoZ outputs) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 1064.0 328.0 Td (annotation report only) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 1064.0 312.0 Td (GBF / gene FASTA / summary.txt) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 1064.0 296.0 Td (record Circularity when available) Tj ET
+1.0 0.95 0.78 rg 0.85 0.47 0.02 RG 1.8 w 270.0 150.0 300.0 82.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 284.0 208.0 Td (Summary FASTA) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 284.0 186.0 Td (result/summary/{sample}.meangs.fasta) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 284.0 170.0 Td ({sample}.novoplasty.fasta) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 284.0 154.0 Td ({sample}.mg-nov-get.fasta) Tj ET
+1.0 0.95 0.78 rg 0.85 0.47 0.02 RG 1.8 w 640.0 150.0 300.0 82.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 654.0 208.0 Td (summary_report.tsv) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 654.0 186.0 Td (source path, software, pipeline) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 654.0 170.0 Td (length, topology, QC flags) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 654.0 154.0 Td (missing/empty/incomplete status) Tj ET
+1.0 0.9 0.9 rg 0.86 0.15 0.15 RG 1.8 w 1010.0 150.0 300.0 82.0 re B
+BT 0.05 0.07 0.1 rg /F2 14 Tf 1024.0 208.0 Td (Manual review) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 1024.0 186.0 Td (contamination risk) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 1024.0 170.0 Td (tool disagreement) Tj ET
+BT 0.22 0.26 0.32 rg /F1 10.5 Tf 1024.0 154.0 Td (abnormal length/topology unknown) Tj ET
+0.7 0.32 0.02 RG 1.5 w 180.0 560.0 m 390.0 232.0 l S
+0.7 0.32 0.02 rg 390.0 232.0 m 389.0 242.0 l 381.4 237.1 l f
+0.7 0.32 0.02 RG 1.5 w 475.0 560.0 m 430.0 232.0 l S
+0.7 0.32 0.02 rg 430.0 232.0 m 435.7 240.2 l 426.7 241.4 l f
+0.7 0.32 0.02 RG 1.5 w 785.0 560.0 m 790.0 232.0 l S
+0.7 0.32 0.02 rg 790.0 232.0 m 794.4 241.0 l 785.3 240.8 l f
+0.7 0.32 0.02 RG 1.5 w 1090.0 560.0 m 1160.0 232.0 l S
+0.7 0.32 0.02 rg 1160.0 232.0 m 1162.6 241.7 l 1153.7 239.8 l f
+0.28 0.34 0.42 RG 1.5 w 570.0 191.0 m 640.0 191.0 l S
+0.28 0.34 0.42 rg 640.0 191.0 m 631.1 195.5 l 631.1 186.5 l f
+0.28 0.34 0.42 RG 1.5 w 940.0 191.0 m 1010.0 191.0 l S
+0.28 0.34 0.42 rg 1010.0 191.0 m 1001.1 195.5 l 1001.1 186.5 l f
+BT 0.05 0.07 0.1 rg /F2 13 Tf 40.0 95.0 Td (Decision checks:) Tj ET
+BT 0.05 0.07 0.1 rg /F1 10 Tf 60.0 75.0 Td (1. MitoZ defaults to annotate, not assembly.  2. Chained workflows summarize the last assembler output.  3. fastp is optional and adapter-only by default.) Tj ET
+BT 0.05 0.07 0.1 rg /F1 10 Tf 60.0 58.0 Td (4. MEANGS scaffold_seeds.fas requires isolated per-sample CWD.  5. GetOrganelle graph/log files are retained for review.) Tj ET
+
+endstream
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 5 0 R /MediaBox [0 0 1440 1050] /Resources << /Font << /F1 2 0 R /F2 3 0 R >> >> /Contents 1 0 R >>
+endobj
+5 0 obj
+<< /Type /Pages /Kids [4 0 R] /Count 1 >>
+endobj
+6 0 obj
+<< /Type /Catalog /Pages 5 0 R >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000010337 00000 n 
+0000010407 00000 n 
+0000010482 00000 n 
+0000010620 00000 n 
+0000010677 00000 n 
+trailer
+<< /Size 7 /Root 6 0 R >>
+startxref
+10726
+%%EOF

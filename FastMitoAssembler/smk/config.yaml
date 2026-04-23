@@ -1,7 +1,12 @@
 reads_dir:
 samples: []
+fq1:                         # optional direct single-sample R1 FASTQ path
+fq2:                         # optional direct single-sample R2 FASTQ path
+sample_name:                 # required when fq1/fq2 are set
 result_dir: 'result'
 fq_path_pattern: '{sample}/{sample}_1.clean.fq.gz'
+fq2_path_pattern:
+fastq_pos: recursive       # recursive | subdir | flat; used when samples are auto-detected from suffix_fq
 organelle_database: 'animal_mt'
 novoplasty_genome_min_size: 12000
 novoplasty_genome_max_size: 22000
@@ -17,15 +22,20 @@ mitoz_thread_number: 20
 meangs_thread: 4        # threads for MEANGS detection (-t)
 meangs_reads: 2000000   # number of reads to sample (-n); reduce for faster speed
 meangs_deepin: true     # enable deeper assembly (--deepin); false = faster but shallower
-meangs_clade: 'Annelida-segmented-worms'
-# Available meangs_clade options (same as MitoZ --clade):
-#   Vertebrata               # 脊椎动物
-#   Arthropoda               # 节肢动物
-#   Mollusca                 # 软体动物
-#   Annelida-segmented-worms # 环节动物 (default)
-#   Echinodermata            # 棘皮动物
-#   Cnidaria                 # 刺胞动物
-#   Others                   # 其他
+meangs_quality: 0.05    # MEANGS low-quality base threshold (-q)
+meangs_species_class: 'Arthropoda'
+# MEANGS v1.3.1 uses --species_class, not MitoZ-style --clade.
+# Available values:
+#   A-worms Arthropoda Bryozoa Chordata Echinodermata Mollusca Nematoda N-worms Porifera-sponges
+meangs_clip: false
+meangs_keepIntMed: false
+meangs_skipassem: false
+meangs_skipqc: false      # MEANGS may fail later if QC is skipped and HMM input is missing
+meangs_skiphmm: false
+meangs_skipextend: false
+meangs_seqscaf:
+meangs_keepMinLen:
+meangs_path:                 # optional direct path to meangs.py; maps to tool_envs.meangs.script_path
 
 cleanup: false       # set true to remove intermediate files after each tool step
 
@@ -54,25 +64,37 @@ subsample_gb: 5
 # trimming — the flags below do adapter-only trimming.
 fastp:
   enabled: false
+  mode: adapter_only
   extra_args: ''                            # e.g. '-G' to also disable polyG trim on NovaSeq data
 
 seed_input:
+seed_mode: single       # single | by-sample
+seed_missing: fail      # fail | skip
 genes:
+assembly_fasta:
+novoplasty_seed_source: auto        # auto | user | meangs
+getorganelle_seed_source: auto      # auto | none | user | meangs | novoplasty
+mitoz_input_source: auto            # auto | assembly_fasta | summary | getorganelle | novoplasty
+summary_dir:
 
 # Tool environment overrides (optional)
 # Global config: ~/.config/FastMitoAssembler/tool_envs.yaml (set once, applies to all projects)
 # Project config: set tool_envs here to override the global config for this project only.
 # conda_env: name of an existing conda environment
 # bin_dir:   directory prepended to PATH when running the tool
+# script_path: full path to a tool script; MEANGS uses python, NOVOPlasty uses perl by default
+# command: complete command override, used only when you know the exact invocation
 # Leave both empty ('') to use the auto-created bundled environment (default).
 # Run `fma check` to detect tools and `fma check --save` to save globally.
 tool_envs:
   meangs:
     conda_env: ''
     bin_dir: ''
+    script_path: ''
   novoplasty:
     conda_env: ''
     bin_dir: ''
+    script_path: ''
   getorganelle:
     conda_env: ''
     bin_dir: ''

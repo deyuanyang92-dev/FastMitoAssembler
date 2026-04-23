@@ -8,8 +8,8 @@
   ██║     ██║  ██║███████║   ██║   ██║ ╚═╝ ██║██║   ██║   ╚██████╔╝██║  ██║███████║
   ╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝     ╚═╝╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝
                                                                                                                                           
-               FastMitoAssembler ({version}) supported by Suqingdong
+               FastMitoAssembler ({version}) v002 beta
   
-            GitHub: https://github.com/suqingdong/FastMitoAssembler
+            GitHub: https://github.com/deyuanyang92-dev/FastMitoAssembler
                                                                    
 █████████████████████████████████████████████████████████████████████████████████████

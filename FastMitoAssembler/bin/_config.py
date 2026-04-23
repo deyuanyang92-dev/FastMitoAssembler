@@ -11,6 +11,7 @@ from FastMitoAssembler.bin._check import (
     _probe_tool,
     _ST_FOUND,
     _ST_ERROR,
+    script_invocation,
 )
 
 _TOOLS = [t for t, _ in TOOL_PROBES]
@@ -44,7 +45,7 @@ def config_cmd():
 @click.option('--bin-dir', default='', metavar='DIR',
               help='directory that contains the tool binary (prepended to PATH)')
 @click.option('--script-path', default='', metavar='PATH',
-              help='full path to a perl script, e.g. /opt/NOVOPlasty/NOVOPlasty.pl (invoked as `perl <path>`)')
+              help='full path to a tool script, e.g. meangs.py or NOVOPlasty.pl')
 @click.option('--no-check', is_flag=True,
               help='skip validation before saving')
 def config_set(tool, conda_env, bin_dir, script_path, no_check):
@@ -112,7 +113,7 @@ def config_show():
         elif bin_dir:
             click.echo(f"  {tool:<16} {'bin_dir':<12} {bin_dir}")
         elif script_path:
-            click.echo(f"  {tool:<16} {'script_path':<12} perl {script_path}")
+            click.echo(f"  {tool:<16} {'script_path':<12} {script_invocation(tool, script_path)}")
         else:
             mode = click.style('⚡ bundled (auto)', fg='yellow')
             click.echo(f"  {tool:<16} {mode}")

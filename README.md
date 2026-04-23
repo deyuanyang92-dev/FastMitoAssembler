@@ -1,6 +1,32 @@
 # Fast Assembler Workflow for MitoGenome
 > `FastMitoAssembler` (alias: `fma` / `FMA`) is a software for fast, accurate assembly of mitochondrial genomes and generation of annotation documents.
 
+## v002 Beta for Testing
+
+Current beta package version: `0.0.2b0` (`v002-beta`).
+
+- Flowchart: [docs/design/fastmito-v002-flowchart.svg](docs/design/fastmito-v002-flowchart.svg)
+- Mermaid source and rules: [docs/design/fastmito-v002-flowchart.md](docs/design/fastmito-v002-flowchart.md)
+- v002 design notes: [docs/design/fastmito-v002.md](docs/design/fastmito-v002.md)
+- Beta installation guide: [docs/INSTALL-v002.md](docs/INSTALL-v002.md)
+- Release note: [docs/releases/v002-beta.md](docs/releases/v002-beta.md)
+
+![FastMitoAssembler v002 workflow flowchart](docs/design/fastmito-v002-flowchart.svg)
+
+This beta is intended for dry-run and controlled testing of the modular
+workflow interface:
+
+```bash
+fma meangs
+fma novoplasty
+fma getorganelle
+fma mitoz
+fma mg-nov
+fma mg-get
+fma mg-nov-get
+fma summary
+```
+
 ### Credits
 
 - **Original idea:** Deyuan Yang
@@ -10,6 +36,9 @@
 ---
 
 ## Installation
+
+For the exact v002 beta build, use [docs/INSTALL-v002.md](docs/INSTALL-v002.md).
+The general installation below follows the active GitHub repository branch.
 
 FastMitoAssembler uses **two layers of environments**:
 

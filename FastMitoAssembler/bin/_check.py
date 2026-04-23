@@ -13,6 +13,11 @@ TOOL_PROBES = [
     ('mitoz',        'mitoz --version'),
 ]
 
+_SCRIPT_INTERPRETERS = {
+    'meangs': 'python',
+    'novoplasty': 'perl',
+}
+
 # Status constants
 _ST_FOUND   = 'found'
 _ST_BUNDLED = 'bundled'   # no explicit config; will be auto-built by Snakemake --use-conda
@@ -23,6 +28,14 @@ def _run_probe(cmd, env_prefix=''):
     full_cmd = f'{env_prefix}{cmd} 2>&1'
     status, _ = util.getstatusoutput(full_cmd)
     return status == 0
+
+
+def script_invocation(tool, script_path, interpreter=None):
+    abs_path = Path(script_path).expanduser().resolve()
+    interpreter = interpreter if interpreter is not None else _SCRIPT_INTERPRETERS.get(tool, '')
+    if interpreter:
+        return f'{interpreter} {abs_path}'
+    return str(abs_path)
 
 
 def _probe_tool(tool, probe_cmd, cfg):
@@ -50,7 +63,7 @@ def _probe_tool(tool, probe_cmd, cfg):
     if script_path:
         abs_path = Path(script_path).expanduser().resolve()
         if abs_path.is_file():
-            return _ST_FOUND, f'script: perl {abs_path}'
+            return _ST_FOUND, f'script: {script_invocation(tool, script_path, cfg.get("script_interpreter"))}'
         return _ST_ERROR, f'script_path "{script_path}" not found — check the path'
 
     # No explicit config — probe PATH; if missing, Snakemake will auto-build the bundled env
@@ -66,7 +79,7 @@ def load_tool_envs(project_tool_envs=None):
         merged = util.read_yaml(GLOBAL_TOOL_ENVS_PATH) or {}
     for tool, cfg in (project_tool_envs or {}).items():
         if cfg and isinstance(cfg, dict) and (
-            cfg.get('conda_env') or cfg.get('bin_dir') or cfg.get('script_path')
+            cfg.get('conda_env') or cfg.get('bin_dir') or cfg.get('script_path') or cfg.get('command')
         ):
             merged[tool] = cfg
     return merged

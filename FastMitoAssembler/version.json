@@ -1,8 +1,8 @@
 {
     "prog": "FastMitoAssembler",
     "desc": "Fast Assembler Workflow for MitoGenome",
-    "url": "https://github.com/suqingdong/FastMitoAssembler",
+    "url": "https://github.com/deyuanyang92-dev/FastMitoAssembler",
     "author": "suqingdong",
     "author_email": "suqingdong1114@gmail.com",
-    "version": "1.0.3"
+    "version": "0.0.2b0"
 }

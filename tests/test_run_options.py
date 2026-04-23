@@ -50,3 +50,28 @@ def test_conda_prefix_absent_when_not_provided():
         runner.invoke(run_cmd, _base_args())
         call_kwargs = mock_smk.call_args[1]
         assert 'conda_prefix' not in call_kwargs or call_kwargs['conda_prefix'] is None
+
+
+def test_direct_single_sample_fastqs_are_forwarded():
+    runner = _make_runner()
+    args = [
+        '--fq1', '/tmp/S1_R1.fq.gz',
+        '--fq2', '/tmp/S1_R2.fq.gz',
+        '--sample-name', 'S1',
+        '--dryrun',
+    ]
+    with patch('snakemake.snakemake') as mock_smk, \
+         patch('os.path.isfile', return_value=True):
+        result = runner.invoke(run_cmd, args)
+        assert result.exit_code == 0
+        config = mock_smk.call_args[1]['config']
+        assert config['samples'] == ['S1']
+        assert config['sample_fastqs']['S1']['fq1'] == '/tmp/S1_R1.fq.gz'
+        assert config['sample_fastqs']['S1']['fq2'] == '/tmp/S1_R2.fq.gz'
+
+
+def test_direct_single_sample_requires_complete_trio():
+    runner = _make_runner()
+    result = runner.invoke(run_cmd, ['--fq1', '/tmp/S1_R1.fq.gz', '--dryrun'])
+    assert result.exit_code != 0
+    assert '--fq1, --fq2 and --sample_name' in result.output

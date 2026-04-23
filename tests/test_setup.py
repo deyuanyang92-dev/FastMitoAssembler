@@ -23,6 +23,16 @@ def test_probe_tool_script_path_found(tmp_path):
     assert 'NOVOPlasty.pl' in detail
 
 
+def test_probe_tool_meangs_script_path_uses_python(tmp_path):
+    script = tmp_path / 'meangs.py'
+    script.write_text('#!/usr/bin/env python\n')
+    cfg = {'conda_env': '', 'bin_dir': '', 'script_path': str(script)}
+    status, detail = _probe_tool('meangs', 'meangs.py --version', cfg)
+    assert status == _ST_FOUND
+    assert 'python' in detail
+    assert 'meangs.py' in detail
+
+
 def test_probe_tool_script_path_missing():
     cfg = {'conda_env': '', 'bin_dir': '', 'script_path': '/nonexistent/NOVOPlasty.pl'}
     status, detail = _probe_tool('novoplasty', 'NOVOPlasty.pl', cfg)
