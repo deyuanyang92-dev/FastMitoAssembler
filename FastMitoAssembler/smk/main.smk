@@ -14,9 +14,7 @@ rule all:
     """
     message: "Congratulations, the pipeline process is complete!"
     input:
-        expand(MITOZ_ANNO_RESULT_DIR("circos.png"), sample=SAMPLES),
         expand(MITOZ_ANNO_RESULT_DIR("summary.txt"), sample=SAMPLES),
-        expand(MITOZ_ANNO_RESULT_DIR(f"{{sample}}_{ORGANELLE_DB}.get_organelle.fasta_mitoscaf.fa.gbf"), sample=SAMPLES),
         expand(mm_report(), sample=SAMPLES),
     run:
         print('ok')
@@ -29,6 +27,9 @@ include: "rules/getorganelle.smk"
 include: "rules/mitoz.smk"
 include: "rules/report.smk"
 include: "rules/summary.smk"
+include: "rules/spades.smk"
+include: "rules/busco.smk"
+include: "rules/multiqc.smk"
 
 
 rule meangs_all:
@@ -48,9 +49,7 @@ rule getorganelle_all:
 
 rule mitoz_all:
     input:
-        expand(MITOZ_ANNO_RESULT_DIR("circos.png"), sample=SAMPLES),
         expand(MITOZ_ANNO_RESULT_DIR("summary.txt"), sample=SAMPLES),
-        expand(MITOZ_ANNO_RESULT_DIR(f"{{sample}}_{ORGANELLE_DB}.get_organelle.fasta_mitoscaf.fa.gbf"), sample=SAMPLES),
 
 
 rule mg_nov_all:
@@ -72,3 +71,47 @@ rule summary_all:
     input:
         summary_all_fasta,
         summary_report_tsv,
+
+
+rule fastp_all:
+    """Aggregate target for all fastp runs."""
+    input:
+        expand(FASTP_FQ1, sample=SAMPLES) if FASTP_ENABLED else [],
+
+
+rule spades_all:
+    """Aggregate target for all SPAdes runs."""
+    input:
+        expand(SPADES_DIR.joinpath('.done'), sample=SAMPLES) if SPADES_ENABLED else [],
+
+
+rule busco_all:
+    """Aggregate target for all BUSCO evaluations."""
+    input:
+        expand(BUSCO_DIR.joinpath('.done'), sample=SAMPLES) if BUSCO_ENABLED else [],
+
+
+rule multiqc_all:
+    """Aggregate target for MultiQC report."""
+    input:
+        MULTIQC_DIR.joinpath('.done') if MULTIQC_ENABLED else [],
+
+
+rule fsb_all:
+    """
+    Complete pipeline: fastp -> MultiQC -> SPAdes -> BUSCO.
+
+    One-click assembly evaluation workflow.
+    """
+    message: "FSB pipeline complete: fastp -> MultiQC -> SPAdes -> BUSCO"
+    input:
+        # fastp outputs
+        expand(FASTP_FQ1, sample=SAMPLES) if FASTP_ENABLED else [],
+        # MultiQC report (after fastp)
+        MULTIQC_DIR.joinpath('.done') if MULTIQC_ENABLED else [],
+        # SPAdes outputs
+        expand(SPADES_DIR.joinpath('.done'), sample=SAMPLES) if SPADES_ENABLED else [],
+        # BUSCO outputs
+        expand(BUSCO_DIR.joinpath('.done'), sample=SAMPLES) if BUSCO_ENABLED else [],
+    run:
+        print('FSB pipeline complete!')

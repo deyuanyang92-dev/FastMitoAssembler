@@ -12,6 +12,9 @@ from FastMitoAssembler.bin._init import init
 from FastMitoAssembler.bin._check import check
 from FastMitoAssembler.bin._config import config_cmd
 from FastMitoAssembler.bin._setup import setup
+from FastMitoAssembler.bin._blast import blast_cmd
+from FastMitoAssembler.bin._clean import clean_cmd
+from FastMitoAssembler.bin._fastp_cmd import fastp
 from FastMitoAssembler.bin._stages import STAGE_COMMANDS
 
 
@@ -84,6 +87,9 @@ def main():
     cli.add_command(check)
     cli.add_command(config_cmd)
     cli.add_command(setup)
+    cli.add_command(blast_cmd)
+    cli.add_command(clean_cmd)
+    cli.add_command(fastp)
     for command in STAGE_COMMANDS:
         cli.add_command(command)
     cli.epilog = __EPILOG__ + _tool_status_for_help()

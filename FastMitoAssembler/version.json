@@ -2,7 +2,7 @@
     "prog": "FastMitoAssembler",
     "desc": "Fast Assembler Workflow for MitoGenome",
     "url": "https://github.com/deyuanyang92-dev/FastMitoAssembler",
-    "author": "suqingdong",
-    "author_email": "suqingdong1114@gmail.com",
-    "version": "0.0.2b0"
+    "author": "Deyuan Yang",
+    "author_email": "deyuanyang92@gmail.com",
+    "version": "0.0.3"
 }

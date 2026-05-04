@@ -1,96 +1,299 @@
+# ============================================================
+# FastMitoAssembler 配置文件 / Configuration
+# ============================================================
+# 说明：留空的参数表示不传递给工具，工具会使用自身默认值。
+# 留 blank = let the tool pick its own default.
+
+# ============================================================
+# 输入数据 / Input Data
+# ============================================================
+# 输入数据目录 / Directory containing FASTQ files
 reads_dir:
+
+# 样本列表（也可通过 --samples 或自动检测） / Sample names (or use --samples / auto-detect)
 samples: []
-fq1:                         # optional direct single-sample R1 FASTQ path
-fq2:                         # optional direct single-sample R2 FASTQ path
-sample_name:                 # required when fq1/fq2 are set
-result_dir: 'result'
+
+# 单样本直接指定模式 / Direct single-sample FASTQ paths (must provide all three together)
+fq1:                         # --fq1  R1 FASTQ 路径
+fq2:                         # --fq2  R2 FASTQ 路径
+sample_name:                 # --sample-name  样本名称（配合 fq1/fq2 使用）
+
+# FASTQ 文件路径模式 / FASTQ path pattern for locating reads
+# {sample} 会被替换为样本名 / {sample} is replaced by sample name
 fq_path_pattern: '{sample}/{sample}_1.clean.fq.gz'
-fq2_path_pattern:
-fastq_pos: recursive       # recursive | subdir | flat; used when samples are auto-detected from suffix_fq
-organelle_database: 'animal_mt'
-novoplasty_genome_min_size: 12000
-novoplasty_genome_max_size: 22000
-novoplasty_kmer_size: 33
-novoplasty_max_mem_gb: 10
-read_length: 150
-insert_size: 300
-mitoz_clade: 'Annelida-segmented-worms'
-genetic_code: 5
-mitoz_thread_number: 20
+fq2_path_pattern:            # R2 路径模式（留空则自动从 R1 模式推导 _1→_2）
 
-# MEANGS parameters
-meangs_thread: 4        # threads for MEANGS detection (-t)
-meangs_reads: 2000000   # number of reads to sample (-n); reduce for faster speed
-meangs_deepin: true     # enable deeper assembly (--deepin); false = faster but shallower
-meangs_quality: 0.05    # MEANGS low-quality base threshold (-q)
-meangs_species_class: 'Arthropoda'
-# MEANGS v1.3.1 uses --species_class, not MitoZ-style --clade.
-# Available values:
-#   A-worms Arthropoda Bryozoa Chordata Echinodermata Mollusca Nematoda N-worms Porifera-sponges
-meangs_clip: false
-meangs_keepIntMed: false
-meangs_skipassem: false
-meangs_skipqc: false      # MEANGS may fail later if QC is skipped and HMM input is missing
-meangs_skiphmm: false
-meangs_skipextend: false
-meangs_seqscaf:
-meangs_keepMinLen:
-meangs_path:                 # optional direct path to meangs.py; maps to tool_envs.meangs.script_path
+# FASTQ 文件位置模式 / FASTQ layout for auto-detection
+# recursive: 递归搜索子目录（默认） | subdir: 仅一级子目录 | flat: 不搜索子目录
+fastq_pos: recursive
 
-cleanup: false       # set true to remove intermediate files after each tool step
+# ============================================================
+# 输出目录 / Output
+# ============================================================
+# 结果输出目录 / Result output directory
+result_dir: 'result'
 
-# GetOrganelle tuning
-# Most keys are intentionally blank: GetOrganelle's own defaults are
-# -F-dependent (e.g. --max-reads is 1.5E7 / 7.5E7 / 3E8 for plastid / plant-mt /
-# animal_mt). Leaving a key blank tells us NOT to forward it, which lets
-# GetOrganelle pick the right default for the organelle type.
-# See: get_organelle_from_reads.py --help
-getorganelle_threads: 4                     # -t; we ship 4 (upstream default is 1)
-getorganelle_rounds:                        # -R; blank = -F-based default (animal_mt=10)
-getorganelle_kmers:                         # -k; blank = GetOrganelle default "21,55,85,115"
-getorganelle_max_reads:                     # --max-reads; blank = -F-based default, "inf" = all reads
-getorganelle_reduce_reads_for_coverage:     # --reduce-reads-for-coverage; blank = default 500, "inf" = no cap
-getorganelle_word_size:                     # -w; blank = auto-estimate
-getorganelle_max_extending_len:             # --max-extending-len; blank = no cap
-getorganelle_all_data: false                # true → sets --max-reads inf AND --reduce-reads-for-coverage inf
-
-# Subsample the paired reads before GetOrganelle (replaces old hardcoded 5G)
-# 0 or null → feed all reads straight through.
-subsample_gb: 5
-
-# Optional upstream adapter trimming (fastp). Disabled by default because
-# the project convention expects adapter-removed reads (e.g. *.clean.fq.gz).
-# Authors of NOVOPlasty and GetOrganelle recommend AGAINST Phred quality
-# trimming — the flags below do adapter-only trimming.
-fastp:
-  enabled: false
-  mode: adapter_only
-  extra_args: ''                            # e.g. '-G' to also disable polyG trim on NovaSeq data
-
-seed_input:
-seed_mode: single       # single | by-sample
-seed_missing: fail      # fail | skip
-genes:
-assembly_fasta:
-novoplasty_seed_source: auto        # auto | user | meangs
-getorganelle_seed_source: auto      # auto | none | user | meangs | novoplasty
-mitoz_input_source: auto            # auto | assembly_fasta | summary | getorganelle | novoplasty
+# 汇总结果目录（留空则使用 result_dir/summary）/ Summary output directory
 summary_dir:
 
-# Tool environment overrides (optional)
-# Global config: ~/.config/FastMitoAssembler/tool_envs.yaml (set once, applies to all projects)
-# Project config: set tool_envs here to override the global config for this project only.
-# conda_env: name of an existing conda environment
-# bin_dir:   directory prepended to PATH when running the tool
-# script_path: full path to a tool script; MEANGS uses python, NOVOPlasty uses perl by default
-# command: complete command override, used only when you know the exact invocation
-# Leave both empty ('') to use the auto-created bundled environment (default).
-# Run `fma check` to detect tools and `fma check --save` to save globally.
+# ============================================================
+# 线粒体基因组参数 / Mitochondrial Genome Parameters
+# ============================================================
+# 预期基因组大小范围 / Expected genome size range (bp)
+novoplasty_genome_min_size: 12000   # 最小 / min (NOVOPlasty & MitoZ)
+novoplasty_genome_max_size: 22000   # 最大 / max
+
+# Reads 参数 / Read parameters
+read_length: 150                    # Illumina read 长度 / read length (bp)
+insert_size: 300                    # 插入片段大小 / insert size (bp)
+
+# ============================================================
+# NOVOPlasty 参数 / NOVOPlasty Parameters
+# ============================================================
+# K-mer 大小 / K-mer size for assembly (奇数, 一般 23-55)
+novoplasty_kmer_size: 33
+
+# 多 K-mer 组装 / Multi-kmer assembly
+# 单个整数: 33 | 逗号分隔: "23,33,39" | YAML 列表: [23, 33, 39]
+# 多 K-mer 时，每个 K-mer 独立运行，最后选择最佳结果（优先 circularized）
+novoplasty_kmers:
+
+# 多 Seed 尝试 / Multi-seed attempts per k-mer
+# 当 > 1 时，第一个 seed 构建哈希表，后续 seed 复用哈希表（加速）
+novoplasty_num_seeds: 1
+
+# 输出子目录名 / Output subdirectory name (默认 2.NOVOPlasty)
+# 独立运行时可自定义为 novoplasty_output 等
+# novoplasty_subdir: '2.NOVOPlasty'
+
+# 内存限制 / RAM limit in GB
+novoplasty_max_mem_gb: 10
+
+# Seed 来源 / Seed source: auto | user | meangs
+# auto: 自动选择（有 seed_input 则用 user，否则用 meangs 输出）
+# user: 使用 seed_input 指定的文件
+# meangs: 使用 MEANGS 检测结果作为 seed
+novoplasty_seed_source: auto
+
+# ============================================================
+# MEANGS 参数 / MEANGS Parameters
+# ============================================================
+# 线程数 / Number of threads
+meangs_thread: 4
+
+# 采样的 reads 数量 / Number of reads to sample (-n)
+# 减小此值可加速但可能降低灵敏度 / Reduce for speed, increase for sensitivity
+meangs_reads: 2000000
+
+# 启用深度组装 / Enable deeper assembly (--deepin)
+# true: 更深更准但更慢 | false: 更快但较浅
+meangs_deepin: true
+
+# 低质量碱基阈值 / Low-quality base threshold (-q)
+meangs_quality: 0.05
+
+# 物种类别 / Species class (--species_class)
+# 可选值 / Available values:
+#   A-worms  Arthropoda  Bryozoa  Chordata  Echinodermata
+#   Mollusca  Nematoda  N-worms  Porifera-sponges
+meangs_species_class: 'Arthropoda'
+
+# MEANGS 高级选项 / MEANGS advanced flags (true/false)
+meangs_clip: false           # --clip: 启用 clipping
+meangs_keepIntMed: false     # --keepIntMed: 保留中间文件
+meangs_skipassem: false      # --skipassem: 跳过组装
+meangs_skipqc: false         # --skipqc: 跳过 QC（注意：跳过可能导致后续 HMM 失败）
+meangs_skiphmm: false        # --skiphmm: 跳过 HMM
+meangs_skipextend: false     # --skipextend: 跳过延伸
+
+# MEANGS 额外参数 / Additional MEANGS parameters (留空不传递)
+meangs_seqscaf:              # -s: scaffold 序列文件
+meangs_keepMinLen:           # --keepMinLen: 保留的最小长度
+
+# MEANGS 脚本路径（可选，也可通过 --meangs-path 指定）
+meangs_path:                 # 直接路径，映射到 tool_envs.meangs.script_path
+
+# ============================================================
+# GetOrganelle 参数 / GetOrganelle Parameters
+# ============================================================
+# 数据库类型 / Database type (-F)
+# animal_mt: 动物线粒体 | plant_pt: 植物叶绿体 | plant_mt: 植物线粒体 | nr: 非冗余
+organelle_database: 'animal_mt'
+
+# 线程数 / Number of threads (-t)
+getorganelle_threads: 4
+
+# 组装轮数 / Assembly rounds (-R)
+# 留空则根据 organelle_database 自动选择（animal_mt=10）
+getorganelle_rounds:
+
+# K-mer 列表 / K-mer sizes (-k)
+# 留空则使用 GetOrganelle 默认值 '21,55,85,115'
+getorganelle_kmers:
+
+# 最大读取数 / Maximum reads (--max-reads)
+# 留空则根据 -F 自动选择 | inf: 不限制 | 数字: 具体限制
+getorganelle_max_reads:
+
+# 覆盖度降低阈值 / Reduce reads for coverage (--reduce-reads-for-coverage)
+# 留空则使用默认值 500 | inf: 不限制
+getorganelle_reduce_reads_for_coverage:
+
+# word size / Word size (-w)
+# 留空则自动估计 / blank = auto-estimate
+getorganelle_word_size:
+
+# 最大延伸长度 / Max extending length (--max-extending-len)
+# 留空则不限制 / blank = no cap
+getorganelle_max_extending_len:
+
+# 使用全部数据 / Use all data (快捷开关)
+# true: 自动设置 --max-reads inf --reduce-reads-for-coverage inf
+# false: 使用上面单独设定的值或工具默认值
+getorganelle_all_data: false
+
+# Seed 来源 / Seed source: auto | none | user | meangs | novoplasty
+# auto: 自动选择（mg-nov-get 流程用 novoplasty 输出，其他用 meangs 输出）
+# none: 不使用 seed
+# user: 使用 seed_input 指定的文件
+# meangs: 使用 MEANGS 检测结果
+# novoplasty: 使用 NOVOPlasty 组装结果
+getorganelle_seed_source: auto
+
+# ============================================================
+# Reads 子采样 / Read Subsampling (GetOrganelle 之前)
+# ============================================================
+# 子采样数据量（GB）/ Subsample size in GB before GetOrganelle
+# 0 或留空: 不子采样，使用全部 reads / 0 or blank = no subsample
+# 例如: 5 表示约 1660万 read pairs (read_length=150 时)
+subsample_gb: 5
+
+# ============================================================
+# MitoZ 注释参数 / MitoZ Annotation Parameters
+# ============================================================
+# 分类群 / Clade (--clade)
+# 常见值: Annelida-segmented-worms, Arthropoda, Chordata, Mollusca, Nematoda 等
+mitoz_clade: 'Annelida-segmented-worms'
+
+# 遗传密码表 / Genetic code table
+# 5: 无脊椎动物线粒体 | 2: 脊椎动物线粒体 | 详见 NCBI genetic code table
+genetic_code: 5
+
+# 线程数 / Number of threads
+mitoz_thread_number: 20
+
+# 输入来源 / Input source: auto | assembly_fasta | summary | getorganelle | novoplasty
+# auto: 自动选择（优先 GetOrganelle 结果）
+# assembly_fasta: 使用 assembly_fasta 指定的外部 FASTA
+# getorganelle: 使用 GetOrganelle 组装结果
+# novoplasty: 使用 NOVOPlasty 组装结果
+mitoz_input_source: auto
+
+# 外部组装 FASTA（可选）/ External assembly FASTA for MitoZ annotation
+# 设置后 mitoz_input_source 自动使用此文件
+assembly_fasta:
+
+# ============================================================
+# fastp 质控参数 / fastp Quality Control
+# ============================================================
+# Fastp 提供多种预设模式，适配不同的数据类型和分析需求
+# Fastp provides preset modes for different data types and analysis needs
+
+fastp:
+  # 是否启用 fastp / Enable fastp
+  enabled: false
+
+  # 预设模式 / Preset mode
+  # adapter_only:   仅去接头（推荐 mitogenome 组装）
+  #                 Adapter trimming only, recommended for mitogenome assembly
+  # shallow_data:   最大化保留 reads（低深度数据、古 DNA）
+  #                 Maximum read preservation for low-depth data
+  # transcriptome:  Poly-A/T 修剪 + 质量过滤（RNA-seq）
+  #                 Poly-A/T trimming + quality filtering for RNA-seq
+  # full_qc:        标准 WGS 质控
+  #                 Standard WGS quality control
+  mode: adapter_only
+
+  # 额外参数 / Extra arguments (passthrough to fastp)
+  # 例如: "-G" 禁用 poly-G 修剪
+  # Example: "-G" to disable poly-G trimming
+  extra_args: ''
+
+  # 高级参数覆盖 / Advanced parameter overrides
+  # 设置后将覆盖预设模式的对应参数
+  # These override preset mode defaults when set
+
+  # 接头控制 / Adapter control
+  # disable_adapter_trimming: false  # 完全禁用接头修剪
+  # adapter_sequence: ''             # 手动指定 R1 接头序列
+  # adapter_sequence_r2: ''          # 手动指定 R2 接头序列
+
+  # 质量过滤 / Quality filtering
+  # disable_quality_filtering: false  # 禁用质量过滤
+  # qualified_quality_phred: 15       # 合格碱基的最低 Phred 值
+  # unqualified_percent_limit: 40     # 不合格碱基最大百分比
+  # n_base_limit: 5                   # 允许的最大 N 碱基数
+
+  # 长度过滤 / Length filtering
+  # disable_length_filtering: false  # 禁用长度过滤
+  # length_required: 15              # 修剪后最小 read 长度
+
+  # 滑动窗口修剪 / Sliding window trimming
+  # cut_front: false          # 启用 5' 端修剪
+  # cut_tail: false           # 启用 3' 端修剪
+  # cut_window_size: 4        # 窗口大小
+  # cut_mean_quality: 20      # 窗口平均质量阈值
+
+  # PolyG/PolyX 修剪 / PolyG/PolyX trimming
+  # trim_poly_g: false        # 修剪 poly-G（NovaSeq 数据）
+  # disable_trim_poly_g: false # 禁用 poly-G 修剪
+  # trim_poly_x: false        # 修剪 poly-A/T/C/G（转录组数据）
+  # poly_x_min_len: 10        # poly-X 最小长度
+
+  # 低复杂度过滤 / Low complexity filtering
+  # disable_low_complexity_filter: false  # 禁用低复杂度过滤
+  # complexity_threshold: 30              # 最小复杂度阈值
+
+# ============================================================
+# Seed 设置 / Seed Configuration
+# ============================================================
+# Seed 输入文件 / Seed input file (.fasta, .gb, .gbk)
+seed_input:
+
+# Seed 模式 / Seed mode: single | by-sample
+# single: 所有样本用同一个 seed | by-sample: 每个样本对应 {sample}.seed.fasta
+seed_mode: single
+
+# Seed 缺失时的行为 / Behavior when seed is missing: fail | skip
+seed_missing: fail
+
+# 目标基因 / Target genes (for GetOrganelle, e.g. 'cox1')
+genes:
+
+# ============================================================
+# 清理 / Cleanup
+# ============================================================
+# 是否清理中间文件 / Remove intermediate files after each step
+cleanup: false
+
+# ============================================================
+# 工具环境配置 / Tool Environment Configuration
+# ============================================================
+# 配置每个工具的运行环境。支持三种方式（优先级从高到低）：
+#   command:     完整命令覆盖（最高优先级）
+#   script_path: 工具脚本路径（自动匹配解释器：MEANGS=python, NOVOPlasty=perl）
+#   conda_env:   conda 环境名称
+#   bin_dir:     可执行文件目录（添加到 PATH）
+# 全部留空则使用 Snakemake 自动创建的 bundled 环境。
+#
+# 全局配置: ~/.config/FastMitoAssembler/tool_envs.yaml（所有项目生效）
+# 项目配置: 在此文件中设置（仅当前项目生效，覆盖全局配置）
+# 诊断工具: 运行 `fma check` 检测工具可用性，`fma check --save` 保存全局配置
 tool_envs:
   meangs:
-    conda_env: ''
-    bin_dir: ''
-    script_path: ''
+    conda_env: ''            # conda 环境名 / conda env name
+    bin_dir: ''              # 可执行文件目录 / binary directory
+    script_path: ''          # 脚本路径 / script path
   novoplasty:
     conda_env: ''
     bin_dir: ''

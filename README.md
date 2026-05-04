@@ -1,360 +1,245 @@
-# Fast Assembler Workflow for MitoGenome
-> `FastMitoAssembler` (alias: `fma` / `FMA`) is a software for fast, accurate assembly of mitochondrial genomes and generation of annotation documents.
+# FastMitoAssembler
 
-## v002 Beta for Testing
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
+[![Snakemake](https://img.shields.io/badge/Snakemake-7.x-green.svg)](https://snakemake.readthedocs.io/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Current beta package version: `0.0.2b0` (`v002-beta`).
+> 线粒体基因组组装与注释的一站式解决方案
 
-- Flowchart: [docs/design/fastmito-v002-flowchart.svg](docs/design/fastmito-v002-flowchart.svg)
-- Mermaid source and rules: [docs/design/fastmito-v002-flowchart.md](docs/design/fastmito-v002-flowchart.md)
-- v002 design notes: [docs/design/fastmito-v002.md](docs/design/fastmito-v002.md)
-- Beta installation guide: [docs/INSTALL-v002.md](docs/INSTALL-v002.md)
-- Release note: [docs/releases/v002-beta.md](docs/releases/v002-beta.md)
+**FastMitoAssembler** (`fma`) 是一个自动化流程，用于从 Illumina 短读长数据组装和注释线粒体基因组。它串联多个组装工具，自动传播种子序列，并生成标准化的输出结果和双语 Materials & Methods 报告。
 
-![FastMitoAssembler v002 workflow flowchart](docs/design/fastmito-v002-flowchart.svg)
+## ✨ 核心特性
 
-This beta is intended for dry-run and controlled testing of the modular
-workflow interface:
+- 🔄 **双后端架构** - 所有工具同时支持 Snakemake 和 Python 后端
+- 🚀 **一键化流程** - `fma fsb-all` 一键运行 fastp → MultiQC → SPAdes → BUSCO
+- 🎯 **自动种子检测** - MEANGS 无参种子检测，无需手动提供种子
+- 🔧 **隔离环境** - 每个工具独立 conda 环境，避免依赖冲突
+- 📊 **断点续跑** - 自动检测已完成样本，支持续跑
+- 📝 **双语报告** - 自动生成中英文 Materials & Methods
 
-```bash
-fma meangs
-fma novoplasty
-fma getorganelle
-fma mitoz
-fma mg-nov
-fma mg-get
-fma mg-nov-get
-fma summary
-```
+## 📦 安装
 
-### Credits
-
-- **Original idea:** Deyuan Yang
-- **Original code:** Bioinformatics engineers at Novogene (诺禾元生物科技)
-- **Maintenance & updates:** Managed by Deyuan Yang using [Claude Code](https://claude.ai/code) — leveraging AI-assisted development to keep pace with the rapidly evolving bioinformatics ecosystem
-
----
-
-## Installation
-
-For the exact v002 beta build, use [docs/INSTALL-v002.md](docs/INSTALL-v002.md).
-The general installation below follows the active GitHub repository branch.
-
-FastMitoAssembler uses **two layers of environments**:
-
-```
-FastMitoAssembler (main env)          ← pipeline orchestrator (Snakemake + CLI)
-├── FastMitoAssembler-meangs          ← MEANGS tool
-├── FastMitoAssembler-novoplasty      ← NOVOPlasty tool
-├── FastMitoAssembler-getorganelle    ← GetOrganelle tool
-└── FastMitoAssembler-mitoz           ← MitoZ tool
-```
-
-Each bioinformatics tool lives in its own isolated conda environment to avoid
-dependency conflicts. Choose the path that fits your situation:
-
-- **[Path A](#path-a-complete-fresh-installation-recommended)** — Nothing installed yet → follow all steps
-- **[Path B](#path-b-tools-already-installed)** — You already have MEANGS / NOVOPlasty / GetOrganelle / MitoZ installed
-
----
-
-### Path A: Complete fresh installation (recommended)
-
-> Copy and run these commands in order. The whole process takes ~20–40 minutes
-> depending on your network speed (mainly downloading MitoZ).
-
-#### 1. Create the main environment
+### 快速安装
 
 ```bash
-# mamba is strongly recommended over conda for speed
+# 1. 创建环境
 mamba create -n FastMitoAssembler -c conda-forge \
-    python=3.9 "snakemake>=7,<8" "pulp<2.8" click jinja2 pyyaml ete3
+    python=3.12 "snakemake>=7,<8" click jinja2 pyyaml
 
 conda activate FastMitoAssembler
-```
 
-> This environment contains only the pipeline runner (Snakemake + FastMitoAssembler CLI).
-> The actual bioinformatics tools are installed in Step 3.
-
-#### 2. Install FastMitoAssembler CLI
-
-```bash
+# 2. 安装 FastMitoAssembler
 pip install git+https://github.com/deyuanyang92-dev/FastMitoAssembler.git
 
-# Verify
-fma --version
-```
-
-#### 3. Install all bioinformatics tools
-
-```bash
-# Creates four isolated conda environments and saves configs globally:
-#   FastMitoAssembler-meangs
-#   FastMitoAssembler-novoplasty
-#   FastMitoAssembler-getorganelle
-#   FastMitoAssembler-mitoz
+# 3. 安装工具环境
 fma prepare tools
-```
 
-> After this step, all future `fma run` calls on this machine automatically
-> use these environments — no additional configuration needed.
-
-#### 4. Prepare databases (one-time setup)
-
-```bash
-# NCBI taxonomy (required by MitoZ annotation)
+# 4. 准备数据库
 fma prepare ncbitaxa
+fma prepare organelle -a animal_mt
 
-# GetOrganelle reference database — choose the one that matches your samples:
-fma prepare organelle -a animal_mt      # animals (most common)
-# fma prepare organelle -a embplant_mt  # plant mitochondria
-# fma prepare organelle -a embplant_pt  # plant chloroplast
-# fma prepare organelle -a all          # all databases (~10 GB)
-```
-
-#### 5. Verify the full installation
-
-```bash
+# 5. 验证安装
 fma check
 ```
 
-Expected output:
-```
-  Tool              Status           Details
-  ──────────────────────────────────────────────────────────────
-  meangs            ✓ found          conda env: FastMitoAssembler-meangs
-  novoplasty        ✓ found          conda env: FastMitoAssembler-novoplasty
-  getorganelle      ✓ found          conda env: FastMitoAssembler-getorganelle
-  mitoz             ✓ found          conda env: FastMitoAssembler-mitoz
-```
+### 使用已有工具
 
----
-
-### Path B: Tools already installed
-
-If MEANGS, NOVOPlasty, GetOrganelle, and MitoZ are already installed (in PATH,
-in existing conda environments, or in a local directory), do the following:
-
-#### 1–2. Create main env + install CLI (same as Path A)
+如果你已经安装了 MEANGS、NOVOPlasty、GetOrganelle、MitoZ：
 
 ```bash
-mamba create -n FastMitoAssembler -c conda-forge \
-    python=3.9 "snakemake>=7,<8" "pulp<2.8" click jinja2 pyyaml ete3
-conda activate FastMitoAssembler
-pip install git+https://github.com/deyuanyang92-dev/FastMitoAssembler.git
+# 自动检测并保存
+fma check --save
+
+# 或手动配置
+fma config set meangs --conda-env my-meangs-env
+fma config set novoplasty --conda-env my-novoplasty-env
 ```
 
-#### 3. Configure your existing tool installations
+## 🚀 快速开始
 
-**Option 3a — Auto-detect** (if tools are already in PATH or named conda envs):
+### 示例：线粒体基因组组装
 
 ```bash
-fma check --save   # probes each tool and saves found locations globally
+# 1. 初始化项目
+mkdir my_project && cd my_project
+fma init
+
+# 2. 编辑 config.yaml
+cat > config.yaml << 'EOF'
+reads_dir: /path/to/reads
+samples: [POL1, POL10, POL11]
+result_dir: result
+organelle_database: animal_mt
+genetic_code: 5
+mitoz_clade: Annelida-segmented-worms
+EOF
+
+# 3. 运行完整流程
+fma run --configfile config.yaml --cores 48 --no-use-conda
 ```
 
-**Option 3b — Manually configure** each tool:
+### 一键化流程 (fastp → SPAdes → BUSCO)
 
 ```bash
-# If the tool is in an existing conda environment:
-fma config set meangs       --conda-env my_meangs_env
-fma config set novoplasty   --conda-env my_novoplasty_env
-fma config set getorganelle --conda-env my_getorganelle_env
-fma config set mitoz        --conda-env my_mitoz_env
+# Python 后端 (无需 Snakemake)
+fma fsb-all --backend python \
+    -r /path/to/reads \
+    -o /path/to/result \
+    --mode meta \
+    -t 16 -m 32
 
-# If the tool binary is in a local directory:
-fma config set meangs --bin-dir /opt/meangs/bin
-fma config set mitoz  --bin-dir /opt/mitoz/bin
-
-# View current configuration
-fma config show
-
-# Remove a configuration (revert to bundled auto mode)
-fma config reset meangs
+# Snakemake 后端
+fma fsb-all --backend snakemake \
+    -r /path/to/reads \
+    -o /path/to/result
 ```
 
-Configurations are saved to `~/.config/FastMitoAssembler/tool_envs.yaml`
-and apply to all future `fma run` calls on this machine.
+## 📖 命令参考
 
-You can also override per-project by adding `tool_envs` to your project's `config.yaml`:
-```yaml
-tool_envs:
-  meangs:
-    conda_env: 'my_meangs_env'
-    bin_dir: ''
-  mitoz:
-    conda_env: ''
-    bin_dir: '/opt/mitoz/bin'
-```
+### 主要命令
 
-#### 4. Prepare databases (same as Path A, Step 4)
+| 命令 | 说明 | 后端支持 |
+|------|------|----------|
+| `fma run` | 完整线粒体组装流程 | Snakemake |
+| `fma fsb-all` | fastp → MultiQC → SPAdes → BUSCO | Python + Snakemake |
+| `fma meangs` | MEANGS 种子检测 | Python + Snakemake |
+| `fma novoplasty` | NOVOPlasty 组装 | Python + Snakemake |
+| `fma getorganelle` | GetOrganelle 组装 | Python + Snakemake |
+| `fma mitoz` | MitoZ 注释 | Python + Snakemake |
+| `fma spades` | SPAdes 组装 | Python + Snakemake |
+| `fma busco` | BUSCO 评估 | Python + Snakemake |
+| `fma multiqc` | MultiQC 汇总 | Python + Snakemake |
+
+### 链式命令
+
+| 命令 | 流程 |
+|------|------|
+| `fma mg-nov` | MEANGS → NOVOPlasty |
+| `fma mg-get` | MEANGS → GetOrganelle |
+| `fma mg-nov-get` | MEANGS → NOVOPlasty → GetOrganelle |
+
+### 配置命令
 
 ```bash
-fma prepare ncbitaxa
-fma prepare organelle -a animal_mt
+fma init                    # 创建 config.yaml
+fma check                   # 检查工具状态
+fma check --save            # 检查并保存配置
+fma config show             # 显示工具配置
+fma config set <tool>       # 设置工具路径
+fma prepare tools           # 安装工具环境
+fma prepare ncbitaxa        # 下载 NCBI 分类数据库
+fma prepare organelle -a animal_mt  # 下载 GetOrganelle 数据库
 ```
 
----
+## 🏗️ 流程架构
 
-## Update
-
-```bash
-conda activate FastMitoAssembler
-pip install -U git+https://github.com/deyuanyang92-dev/FastMitoAssembler.git
-
-# Rebuild tool environments if a tool version was bumped
-fma prepare tools --force
+```
+原始数据 (FASTQ)
+      │
+      ▼
+┌─────────────┐
+│   fastp     │  质控与接头去除
+└─────────────┘
+      │
+      ▼
+┌─────────────┐
+│   MEANGS    │  种子序列检测
+└─────────────┘
+      │
+      ├──────────────────────┐
+      ▼                      ▼
+┌─────────────┐      ┌─────────────┐
+│ NOVOPlasty  │      │ GetOrganelle│
+└─────────────┘      └─────────────┘
+      │                      │
+      └──────────┬───────────┘
+                 ▼
+          ┌─────────────┐
+          │    MitoZ    │  基因注释
+          └─────────────┘
+                 │
+                 ▼
+          ┌─────────────┐
+          │   Summary   │  结果汇总
+          └─────────────┘
 ```
 
-#### Troubleshooting: `fma` command not found after upgrade
-
-If `pip install -U` shows "Requirement already satisfied" and skips the reinstall,
-the CLI entry points (`fma`, `FMA`) may not be regenerated. Fix:
-
-```bash
-pip install --force-reinstall --no-deps \
-    git+https://github.com/deyuanyang92-dev/FastMitoAssembler.git
-fma --version
-```
-
----
-
-## Quick Reference — All Commands
-
-```bash
-fma --help                          # show all commands
-fma --version                       # show version
-
-# ── Installation & setup ──────────────────────────────────────────────────
-fma prepare tools                   # install all tool environments
-fma prepare tools --force           # reinstall/upgrade all tool environments
-fma prepare tools --tool mitoz      # install only one tool
-fma prepare ncbitaxa                # download NCBI taxonomy
-fma prepare organelle -a animal_mt  # download GetOrganelle database
-
-# ── Tool configuration ────────────────────────────────────────────────────
-fma check                           # check tool status
-fma check --save                    # check and save found tools globally
-fma config show                     # show current global tool config
-fma config set <tool> --conda-env <env>   # set conda env for a tool
-fma config set <tool> --bin-dir <dir>     # set binary dir for a tool
-fma config reset <tool>             # reset tool to auto/bundled mode
-fma config reset all                # reset all tools
-
-# ── Project setup ─────────────────────────────────────────────────────────
-fma init                            # create config.yaml in current directory
-fma init --options                  # also create options.yaml
-fma init --force                    # overwrite existing files
-
-# ── Run workflow ──────────────────────────────────────────────────────────
-fma run --configfile config.yaml                      # run (recommended)
-fma run --configfile config.yaml --dryrun             # preview only
-fma run --configfile config.yaml --cores 8            # set CPU cores
-fma run --reads_dir ../data                           # auto-detect samples
-fma run --reads_dir ../data \
-    --suffix_fq '_1.clean.fq.gz,_2.clean.fq.gz;_R1.fastq.gz,_R2.fastq.gz'
-
-# HPC: share tool envs across projects
-fma run --configfile config.yaml --conda-prefix ~/.conda/snakemake-envs
-```
-
----
-
-## Config File Reference
-
-Generate a template:
-```bash
-fma init          # creates config.yaml
-fma init --options  # also creates options.yaml
-```
-
-Key parameters in `config.yaml`:
-```yaml
-reads_dir: '../data/'
-samples: ['sample1', 'sample2']            # omit to auto-detect from reads_dir
-fq_path_pattern: '{sample}/{sample}_1.clean.fq.gz'
-result_dir: 'result'
-
-organelle_database: 'animal_mt'
-genetic_code: 5                            # 5 = invertebrate mt; 2 = vertebrate mt
-clade: 'Annelida-segmented-worms'
-genome_min_size: 12000
-genome_max_size: 22000
-
-read_length: 150
-insert_size: 300
-kmer_size: 33
-max_mem_gb: 10
-
-cleanup: false    # true = delete intermediate files after each step (saves ~10 GB)
-
-# MEANGS parameters
-meangs_reads: 2000000    # reads to sample (reduce for speed)
-meangs_deepin: true      # deeper assembly (more accurate, slower)
-meangs_clade: 'Annelida-segmented-worms'
-# meangs_clade options: Vertebrata | Arthropoda | Mollusca |
-#   Annelida-segmented-worms | Echinodermata | Cnidaria | Others
-```
-
-`options.yaml` — Snakemake execution options:
-```yaml
-cores: 4
-cluster: "qsub -V -cwd -S /bin/bash -e logs/sge/ -o logs/sge/"
-```
-
----
-
-## Run on HPC / Cluster
-
-```bash
-mkdir -p logs/sge/
-fma run --configfile config.yaml --optionfile options.yaml
-```
-```yaml
-# options.yaml
-cluster: "qsub -V -cwd -S /bin/bash -e logs/sge/ -o logs/sge/"
-cores: 20
-```
-
-## Run with Docker
-[docker-readme](./docker/README.md)
-
----
-
-## Example Results Directory
-`[*]` = main result files
+## 📁 输出结构
 
 ```
 result/
-└── 2222-4
-    ├── 1.MEANGS
-    │   ├── 2222-4_deep_detected_mito.fas       [*] seed sequence
-    │   └── scaffold_seeds.fas
-    ├── 2.NOVOPlasty
-    │   ├── config.txt
-    │   ├── 2222-4.novoplasty.fasta             [*] draft assembly
-    │   └── Contigs_1_2222-4.fasta
-    ├── 3.GetOrganelle
-    │   ├── animal_mt.get_organelle.fasta        [*] final assembly
-    │   └── organelle/
-    │       ├── *.path_sequence.fasta            [*] all topology variants
-    │       ├── *.selected_graph.gfa             [*] assembly graph
-    │       └── *.assembly_graph.fastg           [*] Bandage visualization
-    ├── 4.MitozAnnotate
-    │   └── 2222-4.animal_mt.get_organelle.fasta.result/
-    │       ├── *_mitoscaf.fa.gbf                [*] GenBank annotation
-    │       ├── *_mitoscaf.fa.sqn                [*] NCBI submission file
-    │       ├── circos.png / circos.svg          [*] circular genome map
-    │       └── summary.txt                      [*] gene recovery summary
-    └── materials_and_methods.md                 [*] bilingual M&M for papers
+├── sample1/
+│   ├── 1.MEANGS/
+│   │   └── animal_mt.meangs.fasta      # MEANGS 组装结果
+│   ├── 2.NOVOPlasty/
+│   │   └── sample1.novoplasty.fasta    # NOVOPlasty 组装结果
+│   ├── 3.GetOrganelle/
+│   │   └── animal_mt.get_organelle.fasta  # GetOrganelle 组装结果
+│   └── 4.MitozAnnotate/
+│       └── sample1.result/
+│           ├── summary.txt              # 基因注释摘要
+│           ├── cds/                     # 编码序列
+│           ├── genes/                   # 基因注释
+│           └── circos.png               # 环状基因组图
+├── summary/
+│   ├── summary_all.fasta                # 所有组装序列
+│   └── summary_report.tsv               # 汇总表格
+└── Materials_and_Methods.txt            # 双语 M&M 报告
 ```
 
----
+## 📚 文档
 
-## Softwares Used
+- [Wiki](docs/WIKI.md) - 完整使用指南
+- [User Manual](docs/manual.md) - 详细参数说明
+- [INSTALL-v002](docs/INSTALL-v002.md) - 安装指南
+- [Flowchart](docs/design/fastmito-v002-flowchart.svg) - 流程图
 
-- [MEANGS](https://github.com/YanCCscu/meangs)
-- [NOVOplasty](https://github.com/Edith1715/NOVOplasty)
-- [GetOrganelle](https://github.com/Kinggerm/GetOrganelle)
-- [SPAdes](https://github.com/ablab/spades)
-- [MitoZ](https://github.com/linzhi2013/MitoZ)
-- [NCBI-Blast](https://blast.ncbi.nlm.nih.gov/doc/blast-help/downloadblastdata.html)
+## 🔧 支持的生物
+
+| 类群 | 数据库 | 遗传密码 |
+|------|--------|----------|
+| 动物 (默认) | `animal_mt` | 5 (无脊椎) / 2 (脊椎) |
+| 真菌 | `fungus_mt` | 4 |
+| 植物 | `embplant_mt` | 1 |
+| 叶绿体 | `embplant_pt` | 11 |
+
+## 🛠️ 使用的工具
+
+- [MEANGS](https://github.com/YanCCscu/meangs) - 无参种子检测
+- [NOVOPlasty](https://github.com/Edith1715/NOVOplasty) - 组装工具
+- [GetOrganelle](https://github.com/Kinggerm/GetOrganelle) - 细胞器组装
+- [SPAdes](https://github.com/ablab/spades) - 基因组组装
+- [MitoZ](https://github.com/linzhi2013/MitoZ) - 线粒体注释
+- [fastp](https://github.com/OpenGene/fastp) - 质量控制
+- [BUSCO](https://busco.ezlab.org/) - 组装评估
+- [MultiQC](https://multiqc.info/) - 报告汇总
+
+## 📝 引用
+
+如果你在研究中使用了 FastMitoAssembler，请引用以下文章：
+
+**MEANGS**:
+> Yan, C., et al. (2022). MEANGS: A reference-free mitochondrial genome assembly tool for high-throughput sequencing data. *Molecular Ecology Resources*.
+
+**NOVOPlasty**:
+> Dierckxsens, N., et al. (2017). NOVOPlasty: de novo assembly of organelle genomes from whole genome data. *Nucleic Acids Research*.
+
+**GetOrganelle**:
+> Jin, J.J., et al. (2020). GetOrganelle: a fast and versatile toolkit for accurate de novo assembly of organelle genomes. *Genome Biology*.
+
+**MitoZ**:
+> Meng, G., et al. (2019). MitoZ: a toolkit for animal mitochondrial genome assembly, annotation and visualization. *Nucleic Acids Research*.
+
+## 📄 许可证
+
+MIT License - 详见 [LICENSE](LICENSE) 文件
+
+## 👥 贡献者
+
+- **Original idea:** Deyuan Yang
+- **Original code:** Bioinformatics engineers at Novogene (诺禾元生物科技)
+- **Maintenance & updates:** Managed by Deyuan Yang using [Claude Code](https://claude.ai/code)
+
+## 🐛 问题反馈
+
+如有问题或建议，请在 [GitHub Issues](https://github.com/deyuanyang92-dev/FastMitoAssembler/issues) 提交。
