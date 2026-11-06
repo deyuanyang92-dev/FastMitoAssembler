@@ -47,7 +47,11 @@ MEANGS_DIR = partial(SAMPLE_DIR, "1.MEANGS")
 NOVOPLASTY_DIR = partial(SAMPLE_DIR, "2.NOVOPlasty")
 ORGANELLE_DIR = partial(SAMPLE_DIR, "3.GetOrganelle")
 MITOZ_ANNO_DIR = partial(SAMPLE_DIR, "4.MitozAnnotate")
-MITOZ_ANNO_RESULT_DIR = partial(MITOZ_ANNO_DIR, f"{{sample}}.{ORGANELLE_DB}.get_organelle.fasta.result")
+
+# v0.03: MitoZ can annotate external FASTA files (batch mitoz), e.g. '/data/{sample}.fasta'
+FASTA_PATTERN = config.get('fasta_pattern')
+MITOZ_FASTA_NAME = 'input.fasta' if FASTA_PATTERN else f'{ORGANELLE_DB}.get_organelle.fasta'
+MITOZ_ANNO_RESULT_DIR = partial(MITOZ_ANNO_DIR, f"{{sample}}.{MITOZ_FASTA_NAME}.result")
 
 # Benchmark directory
 BENCHMARK_DIR = Path(config.get("benchmark_dir", "benchmark")).resolve()
@@ -61,10 +65,30 @@ organelle_fasta_new = ORGANELLE_DIR(f"{ORGANELLE_DB}.get_organelle.fasta")
 
 # ==============================================================
 # Read data
-READS_DIR = Path(config.get("reads_dir", ".")).resolve()
+READS_DIR = Path(config.get("reads_dir") or ".").resolve()
 FQ_PATH_PATTERN = config.get('fq_path_pattern', '{sample}/{sample}_1.clean.fq.gz')
-FQ1 = READS_DIR.joinpath(FQ_PATH_PATTERN)
-FQ2 = READS_DIR.joinpath(FQ_PATH_PATTERN.replace('1', '2'))
+RAW_FQ1 = READS_DIR.joinpath(FQ_PATH_PATTERN)
+RAW_FQ2 = READS_DIR.joinpath(FQ_PATH_PATTERN.replace('1', '2'))
+
+# v0.03: optional adapter-only trimming with fastp (off by default).
+# NOVOPlasty and GetOrganelle recommend raw (not quality-trimmed) reads,
+# so only adapters are removed; all downstream steps use the trimmed reads.
+FASTP = bool(config.get('fastp', False))
+if FASTP:
+    FQ1 = SAMPLE_DIR("0.fastp", "{sample}_1.fastp.fq.gz")
+    FQ2 = SAMPLE_DIR("0.fastp", "{sample}_2.fastp.fq.gz")
+else:
+    FQ1, FQ2 = RAW_FQ1, RAW_FQ2
+
+# v0.03: seed for GetOrganelle: novoplasty (default, original design) | meangs | none
+# none + seed_input: the MEANGS rule only converts seed_input (MEANGS is not run).
+GETORGANELLE_SEED = config.get('getorganelle_seed', 'novoplasty')
+if GETORGANELLE_SEED == 'novoplasty':
+    GETORGANELLE_SEED_FILE = novoplasty_fasta
+elif GETORGANELLE_SEED == 'meangs' or SEED_INPUT != 'none':
+    GETORGANELLE_SEED_FILE = seed_fas
+else:
+    GETORGANELLE_SEED_FILE = None
 
 
 # FQ1 = READS_DIR.joinpath("{sample}_1.clean.fq.gz")
@@ -85,6 +109,52 @@ rule all:
         expand(MITOZ_ANNO_RESULT_DIR(f"{{sample}}_{ORGANELLE_DB}.get_organelle.fasta_mitoscaf.fa.gbf"), sample=SAMPLES),
     run:
         print('ok')
+
+# v0.03: partial targets
+rule meangs_all:
+    """MEANGS only."""
+    input:
+        expand(seed_fas, sample=SAMPLES),
+
+rule getorganelle_all:
+    """GetOrganelle only (getorganelle_seed: none), or after MEANGS/NOVOPlasty."""
+    input:
+        expand(organelle_fasta_new, sample=SAMPLES),
+
+rule mitoz_all:
+    """MitoZ annotation only (summary.txt is always produced by MitoZ annotate)."""
+    input:
+        expand(MITOZ_ANNO_RESULT_DIR("summary.txt"), sample=SAMPLES),
+
+if FASTP:
+    rule fastp:
+        """
+        Adapter-only trimming with fastp.
+        - https://github.com/OpenGene/fastp
+
+        -Q disables quality filtering, -L disables length filtering.
+        """
+        input:
+            fq1=RAW_FQ1,
+            fq2=RAW_FQ2,
+        output:
+            fq1=FQ1,
+            fq2=FQ2,
+        params:
+            outdir=SAMPLE_DIR("0.fastp"),
+        message: "fastp for sample: {wildcards.sample}"
+        log: LOG_DIR.joinpath('{sample}', 'fastp.log')
+        benchmark: BENCHMARK_DIR.joinpath('{sample}', 'fastp.stat')
+        shell:
+            """
+            (mkdir -p {params.outdir}
+            fastp --detect_adapter_for_pe -Q -L \\
+                -i {input.fq1} -I {input.fq2} \\
+                -o {output.fq1} -O {output.fq2} \\
+                -j {params.outdir}/{wildcards.sample}.fastp.json \\
+                -h {params.outdir}/{wildcards.sample}.fastp.html
+            ) 2>{log}.err 1>{log}
+            """
 
 rule MEANGS:
     """
@@ -236,12 +306,13 @@ rule GetOrganelle:
     input:
         fq1=FQ1,
         fq2=FQ2,
-        novoplasty_fasta=novoplasty_fasta,
+        seed=GETORGANELLE_SEED_FILE or [],
     output:
         organelle_fasta_new=organelle_fasta_new,
     params:
         output_path=ORGANELLE_DIR(),
         output_path_temp=ORGANELLE_DIR("organelle"),
+        seed_arg=lambda wildcards, input: f'-s {input.seed}' if input.seed else '',
     message: "GetOrganelle for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'get_organelle.log')
     benchmark: BENCHMARK_DIR.joinpath('{sample}', 'get_organelle.stat')
@@ -276,8 +347,7 @@ rule GetOrganelle:
             -F {ORGANELLE_DB} \\
             -o {params.output_path_temp} \\
             --reduce-reads-for-coverage inf \\
-            --max-reads inf \\
-            -s {input.novoplasty_fasta}
+            --max-reads inf {params.seed_arg}
 
         # replace '+', 'circular' characters
         seqkit replace -w0 \\
@@ -288,6 +358,30 @@ rule GetOrganelle:
             -o {output.organelle_fasta_new}
         ) 2>{log}.err 1>{log}
     """
+
+# v0.03: MitoZ input: GetOrganelle result (default) or external FASTA (fasta_pattern).
+# Reads are always used for the GetOrganelle result; for external FASTA only when reads_dir is set.
+if FASTA_PATTERN:
+    MITOZ_FASTA = MITOZ_ANNO_DIR(MITOZ_FASTA_NAME)
+    MITOZ_READS = {'fq1': FQ1, 'fq2': FQ2} if config.get('reads_dir') else {}
+    MITOZ_OUTPUTS = {'summary': MITOZ_ANNO_RESULT_DIR("summary.txt")}
+
+    rule MitozInputFasta:
+        """Copy the external FASTA ({fasta_pattern}) into the MitoZ directory."""
+        input:
+            fasta=FASTA_PATTERN,
+        output:
+            fasta=MITOZ_FASTA,
+        shell:
+            "cp -L {input.fasta} {output.fasta}"
+else:
+    MITOZ_FASTA = organelle_fasta_new
+    MITOZ_READS = {'fq1': FQ1, 'fq2': FQ2}
+    MITOZ_OUTPUTS = {
+        'circos': MITOZ_ANNO_RESULT_DIR("circos.png"),
+        'summary': MITOZ_ANNO_RESULT_DIR("summary.txt"),
+        'genbank': MITOZ_ANNO_RESULT_DIR(f"{{sample}}_{ORGANELLE_DB}.get_organelle.fasta_mitoscaf.fa.gbf"),
+    }
 
 rule MitozAnnotate:
     """
@@ -305,15 +399,13 @@ rule MitozAnnotate:
     outdir: Path to the directory where the output files should be saved.
     """
     input:
-        fq1=FQ1,
-        fq2=FQ2,
-        organelle_fasta_new=organelle_fasta_new,
+        **MITOZ_READS,
+        organelle_fasta_new=MITOZ_FASTA,
     output:
-        circos=MITOZ_ANNO_RESULT_DIR("circos.png"),
-        summary=MITOZ_ANNO_RESULT_DIR("summary.txt"),
-        genbank=MITOZ_ANNO_RESULT_DIR(f"{{sample}}_{ORGANELLE_DB}.get_organelle.fasta_mitoscaf.fa.gbf"),
+        **MITOZ_OUTPUTS,
     params:
-        outdir=MITOZ_ANNO_DIR()
+        outdir=MITOZ_ANNO_DIR(),
+        fq_arg=lambda wildcards, input: f'--fq1 {input.fq1} --fq2 {input.fq2}' if MITOZ_READS else '',
     message: "MitozAnnotate for sample: {wildcards.sample}"
     log: LOG_DIR.joinpath('{sample}', 'mitoz_annotate.log')
     benchmark: BENCHMARK_DIR.joinpath('{sample}', 'mitoz_annotate.stat')
@@ -326,9 +418,7 @@ rule MitozAnnotate:
         mitoz annotate \\
             --outprefix {wildcards.sample} \\
             --thread_number {THREAD_NUMBER} \\
-            --fastafiles {input.organelle_fasta_new} \\
-            --fq1 {input.fq1} \\
-            --fq2 {input.fq2} \\
+            --fastafiles {input.organelle_fasta_new} {params.fq_arg} \\
             --species_name "{wildcards.sample}" \\
             --genetic_code {GENETIC_CODE} \\
             --clade {CLADE}

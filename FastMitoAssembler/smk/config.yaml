@@ -15,3 +15,8 @@ thread_number: 20
 
 seed_input:
 genes:
+
+# v0.03
+fastp: false                 # true: adapter-only trimming with fastp before all steps
+getorganelle_seed: novoplasty  # novoplasty | meangs | none
+fasta_pattern:               # MitoZ external FASTA, e.g. '/data/{sample}.fasta'

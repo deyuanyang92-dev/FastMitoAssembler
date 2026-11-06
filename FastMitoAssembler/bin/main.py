@@ -5,8 +5,8 @@ import yaml
 import click
 import snakemake
 
-from FastMitoAssembler import MAIN_SMK, DEFAULT_CONFIG_FILE, DEFAULT_OPTION_FILE, VERSION, BANNER
-from FastMitoAssembler.bin._run import run
+from FastMitoAssembler import MAIN_SMK, DEFAULT_CONFIG_FILE, DEFAULT_OPTION_FILE, VERSION, BANNER, CITATION
+from FastMitoAssembler.bin._run import run, meangs, mg_get, mg_nov_get, getorganelle, mitoz
 from FastMitoAssembler.bin._other import prepare
 
 
@@ -23,7 +23,9 @@ Configfile: {DEFAULT_CONFIG_FILE}
 Optionfile: {DEFAULT_OPTION_FILE}
 
 Contact: {author}<{author_email}>
-''', fg='white').format(MAIN_SMK=MAIN_SMK, DEFAULT_CONFIG_FILE=DEFAULT_CONFIG_FILE, DEFAULT_OPTION_FILE=DEFAULT_OPTION_FILE, **VERSION)
+
+Citation: {CITATION}
+''', fg='white').format(MAIN_SMK=MAIN_SMK, DEFAULT_CONFIG_FILE=DEFAULT_CONFIG_FILE, DEFAULT_OPTION_FILE=DEFAULT_OPTION_FILE, CITATION=CITATION, **VERSION)
 
 
 @click.group(
@@ -43,6 +45,11 @@ def cli():
 
 def main():
     cli.add_command(run)
+    cli.add_command(meangs)
+    cli.add_command(mg_get)
+    cli.add_command(mg_nov_get)
+    cli.add_command(getorganelle)
+    cli.add_command(mitoz)
     cli.add_command(prepare)
     cli()
 

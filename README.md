@@ -94,6 +94,37 @@ FastMitoAssembler run --configfile config.yaml --optionfile options.yaml
 # printshellcmds: true
 # cores: 2
 ```
+#### Run Part of the Workflow (v0.03)
+All commands accept the same options as `run`. `fma` is a short alias of `FastMitoAssembler`.
+```bash
+# 1. MEANGS only
+fma meangs --configfile config.yaml
+
+# 2. MEANGS -> GetOrganelle (MEANGS result as GetOrganelle seed)
+fma mg-get --configfile config.yaml
+
+# 3. MEANGS -> NOVOPlasty -> GetOrganelle
+fma mg-nov-get --configfile config.yaml
+
+# 4. MEANGS -> NOVOPlasty -> GetOrganelle -> MitoZ (one-click, same as before)
+fma run --configfile config.yaml
+
+# 5. remove adapters with fastp first (adapter only, no quality trimming), works with every command
+fma run --configfile config.yaml --fastp
+
+# 7. GetOrganelle in batch (no seed; add --seed_input seed.fasta to use a seed)
+fma getorganelle --reads_dir ../data --samples S1 --samples S2
+
+# 8. MitoZ in batch: annotate GetOrganelle results, or external FASTA files (reads are optional)
+fma mitoz --configfile config.yaml
+fma mitoz --samples S1 --samples S2 --fasta_pattern '/data/{sample}.fasta'
+```
+NOVOPlasty and GetOrganelle recommend raw reads without quality trimming, so `--fastp` only removes adapters
+(`fastp --detect_adapter_for_pe -Q -L`). Trimmed reads are written to `result/{sample}/0.fastp/`.
+
+With `--configfile`, values in the config file take priority over command line options
+(e.g. set `fastp: true` in `config.yaml`).
+
 #### Use with Snakemake
 ```bash
 # the `main.smk` and `config.yaml` template can be found with command: `FastMitoAssembler`
@@ -153,3 +184,15 @@ result/
 - [SPAdes](https://github.com/ablab/spades)
 - [MitoZ](https://github.com/linzhi2013/MitoZ)
 - [NCBI-Blast](https://blast.ncbi.nlm.nih.gov/doc/blast-help/downloadblastdata.html)
+
+### Citation
+If you use FastMitoAssembler, please cite:
+
+Yang D, Zeng S, Wang Z, Zhang Y, Yang D, Glasby CJ, Hwang J-S, Cai L (2024) Molecular systematics of *Perinereis* and an investigation of the status and relationships of the cultured species *Perinereis wilsoni* Glasby & Hsieh, 2006 (Annelida, Nereididae). Zoosystematics and Evolution 100(4): 1297–1314. https://doi.org/10.3897/zse.100.127201
+
+Please also cite the software used in the workflow (see above), and [fastp](https://github.com/OpenGene/fastp) when `--fastp` is used.
+
+### Versions
+- v0.01: original FastMitoAssembler (tag `v0.01`)
+- v0.02: dual-backend version (tag `v0.02`)
+- v0.03: based on v0.01; adds partial workflows, optional fastp, batch GetOrganelle/MitoZ

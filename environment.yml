@@ -16,6 +16,7 @@ dependencies:
   - blast
   - mitoz
   - seqkit
+  - fastp
   - meangs
   - click
   - jinja2
